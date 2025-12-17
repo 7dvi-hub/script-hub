@@ -1,337 +1,368 @@
 --// =========================================================
---// 7DVI HUB | PREMIUM PANEL 2025
---// Single File Script | FULL FIXED | STABLE
+--// 7DVI HUB | ADMIN PANEL - OWN GAME ONLY
+--// Single File | STABLE | CLEAN
 --// =========================================================
 
 --// CONFIG
 local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.3.1"
+local HUB_VERSION = "v1.3.0"
 local VALID_KEY = "7dvi-2025-PREMIUM"
+
+--// KEYBINDS
+local TOGGLE_KEY = Enum.KeyCode.B
 
 --// SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 
+local LP = Players.LocalPlayer
+
 --// STATES
-local MenuOpen = true
-local Minimized = false
-local FlyEnabled = false
-local SpeedEnabled = false
-local ESPEnabled = false
-local NoclipEnabled = false
+local Open = true
+local ESP_ENABLED = false
+local FLY = false
+local SPEED = false
+local NOCLIP = false
+local AIMBOT = false
+local SILENT = false
 
 local FlySpeed = 60
-local WalkSpeedValue = 16
-
-local FlyBV, FlyBG
-local ESP_CACHE = {}
+local WalkSpeed = 16
+local AimRadius = 150
 
 --// =========================================================
 --// UTILS
 --// =========================================================
-local function GetChar()
-	return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local function Char()
+	return LP.Character or LP.CharacterAdded:Wait()
 end
 
-local function GetHumanoid()
-	local c = GetChar()
-	return c and c:FindFirstChildOfClass("Humanoid")
+local function Hum()
+	return Char():WaitForChild("Humanoid")
 end
 
-local function GetHRP()
-	local c = GetChar()
-	return c and c:FindFirstChild("HumanoidRootPart")
-end
-
-local function Tween(obj,time,props)
-	TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props):Play()
+local function HRP(plr)
+	return plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 end
 
 --// =========================================================
 --// UI BASE
 --// =========================================================
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "7DVI_HUB"
-ScreenGui.ResetOnSpawn = false
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "7DVI_HUB"
+gui.ResetOnSpawn = false
 
-local Shadow = Instance.new("Frame", ScreenGui)
-Shadow.Size = UDim2.fromScale(0.42,0.56)
-Shadow.Position = UDim2.fromScale(0.5,0.5)
-Shadow.AnchorPoint = Vector2.new(0.5,0.5)
-Shadow.BackgroundColor3 = Color3.new(0,0,0)
-Shadow.BackgroundTransparency = 0.55
-Instance.new("UICorner",Shadow).CornerRadius = UDim.new(0,22)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.fromScale(0.45,0.6)
+main.Position = UDim2.fromScale(0.5,0.5)
+main.AnchorPoint = Vector2.new(0.5,0.5)
+main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,18)
 
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.fromScale(0.4,0.52)
-Main.Position = UDim2.fromScale(0.5,0.5)
-Main.AnchorPoint = Vector2.new(0.5,0.5)
-Main.BackgroundColor3 = Color3.fromRGB(22,22,22)
-Instance.new("UICorner",Main).CornerRadius = UDim.new(0,22)
+-- SHADOW
+local shadow = Instance.new("Frame", gui)
+shadow.Size = main.Size
+shadow.Position = main.Position
+shadow.AnchorPoint = main.AnchorPoint
+shadow.BackgroundColor3 = Color3.new(0,0,0)
+shadow.BackgroundTransparency = 0.5
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0,18)
+shadow.ZIndex = 0
+main.ZIndex = 1
 
---// DRAG
+-- DRAG
 do
-	local dragging, dragStart, startPos
-	Main.InputBegan:Connect(function(i)
+	local drag, startPos, dragStart
+	main.InputBegan:Connect(function(i)
 		if i.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
+			drag = true
 			dragStart = i.Position
-			startPos = Main.Position
+			startPos = main.Position
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then drag = false end
+			end)
 		end
 	end)
 	UIS.InputChanged:Connect(function(i)
-		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+		if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
 			local delta = i.Position - dragStart
-			Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
-			Shadow.Position = Main.Position
-		end
-	end)
-	UIS.InputEnded:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			shadow.Position = main.Position
 		end
 	end)
 end
 
---// TOP BUTTONS
-local CloseAll = Instance.new("TextButton",Main)
-CloseAll.Size = UDim2.fromOffset(32,32)
-CloseAll.Position = UDim2.new(1,-38,0,8)
-CloseAll.Text = "X"
-CloseAll.BackgroundColor3 = Color3.fromRGB(120,60,60)
-CloseAll.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",CloseAll)
+-- CLOSE / MINIMIZE
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.fromOffset(32,32)
+close.Position = UDim2.new(1,-38,0,6)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(120,40,40)
+close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", close)
 
-local MinBtn = Instance.new("TextButton",Main)
-MinBtn.Size = UDim2.fromOffset(32,32)
-MinBtn.Position = UDim2.new(1,-76,0,8)
-MinBtn.Text = "-"
-MinBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-MinBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",MinBtn)
+local minimize = Instance.new("TextButton", main)
+minimize.Size = UDim2.fromOffset(32,32)
+minimize.Position = UDim2.new(1,-76,0,6)
+minimize.Text = "-"
+minimize.BackgroundColor3 = Color3.fromRGB(50,50,50)
+minimize.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", minimize)
 
-CloseAll.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
 end)
 
-MinBtn.MouseButton1Click:Connect(function()
-	Minimized = not Minimized
-	if Minimized then
-		Tween(Main,0.25,{Size = UDim2.fromScale(0.4,0.08)})
-		Tween(Shadow,0.25,{Size = UDim2.fromScale(0.42,0.1)})
-	else
-		Tween(Main,0.25,{Size = UDim2.fromScale(0.4,0.52)})
-		Tween(Shadow,0.25,{Size = UDim2.fromScale(0.42,0.56)})
+minimize.MouseButton1Click:Connect(function()
+	Open = not Open
+	main.Visible = Open
+	shadow.Visible = Open
+end)
+
+UIS.InputBegan:Connect(function(i,g)
+	if not g and i.KeyCode == TOGGLE_KEY then
+		Open = not Open
+		main.Visible = Open
+		shadow.Visible = Open
 	end
 end)
 
 --// =========================================================
 --// KEY SYSTEM
 --// =========================================================
-local KeyFrame = Instance.new("Frame",Main)
-KeyFrame.Size = UDim2.fromScale(1,1)
-KeyFrame.BackgroundTransparency = 1
+local keyFrame = Instance.new("Frame", main)
+keyFrame.Size = UDim2.fromScale(1,1)
+keyFrame.BackgroundTransparency = 1
 
-local KeyBox = Instance.new("TextBox",KeyFrame)
-KeyBox.Size = UDim2.fromScale(0.6,0.12)
-KeyBox.Position = UDim2.fromScale(0.5,0.42)
-KeyBox.AnchorPoint = Vector2.new(0.5,0.5)
-KeyBox.PlaceholderText = "Digite a KEY"
-KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-KeyBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",KeyBox)
+local keyBox = Instance.new("TextBox", keyFrame)
+keyBox.Size = UDim2.fromScale(0.6,0.1)
+keyBox.Position = UDim2.fromScale(0.5,0.45)
+keyBox.AnchorPoint = Vector2.new(0.5,0.5)
+keyBox.PlaceholderText = "Digite a KEY"
+keyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+keyBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", keyBox)
 
-local Verify = Instance.new("TextButton",KeyFrame)
-Verify.Size = UDim2.fromScale(0.3,0.1)
-Verify.Position = UDim2.fromScale(0.5,0.56)
-Verify.AnchorPoint = Vector2.new(0.5,0.5)
-Verify.Text = "Verificar Key"
-Verify.BackgroundColor3 = Color3.fromRGB(55,55,55)
-Verify.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",Verify)
+local verify = Instance.new("TextButton", keyFrame)
+verify.Size = UDim2.fromScale(0.3,0.08)
+verify.Position = UDim2.fromScale(0.5,0.58)
+verify.AnchorPoint = Vector2.new(0.5,0.5)
+verify.Text = "Verificar"
+verify.BackgroundColor3 = Color3.fromRGB(60,60,60)
+verify.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", verify)
 
-local KeyMsg = Instance.new("TextLabel",KeyFrame)
-KeyMsg.Size = UDim2.fromScale(1,0.1)
-KeyMsg.Position = UDim2.fromScale(0,0.7)
-KeyMsg.BackgroundTransparency = 1
-KeyMsg.Text = ""
+local hub = Instance.new("Frame", main)
+hub.Size = UDim2.fromScale(1,1)
+hub.Visible = false
+hub.BackgroundTransparency = 1
 
-local Hub = Instance.new("Frame",Main)
-Hub.Size = UDim2.fromScale(1,1)
-Hub.Visible = false
-Hub.BackgroundTransparency = 1
-
-Verify.MouseButton1Click:Connect(function()
-	if KeyBox.Text == VALID_KEY then
-		KeyMsg.Text = "Key válida!"
-		KeyMsg.TextColor3 = Color3.fromRGB(0,255,0)
-		task.wait(0.4)
-		KeyFrame.Visible = false
-		Hub.Visible = true
-	else
-		KeyMsg.Text = "Key inválida!"
-		KeyMsg.TextColor3 = Color3.fromRGB(255,0,0)
+verify.MouseButton1Click:Connect(function()
+	if keyBox.Text == VALID_KEY then
+		keyFrame.Visible = false
+		hub.Visible = true
 	end
 end)
 
 --// =========================================================
 --// TABS
 --// =========================================================
-local Tabs = {"Main","Player","Visual","Advantage","Settings"}
-local TabFrames = {}
+local tabs = {"Main","Player","Visual","Advantage","Settings"}
+local frames = {}
 
-local TabBar = Instance.new("Frame",Hub)
-TabBar.Size = UDim2.fromScale(1,0.12)
-TabBar.BackgroundColor3 = Color3.fromRGB(18,18,18)
+local bar = Instance.new("Frame", hub)
+bar.Size = UDim2.fromScale(1,0.12)
+bar.BackgroundColor3 = Color3.fromRGB(15,15,15)
 
-local Content = Instance.new("Frame",Hub)
-Content.Size = UDim2.fromScale(1,0.88)
-Content.Position = UDim2.fromScale(0,0.12)
-Content.BackgroundTransparency = 1
+local content = Instance.new("Frame", hub)
+content.Size = UDim2.fromScale(1,0.88)
+content.Position = UDim2.fromScale(0,0.12)
+content.BackgroundTransparency = 1
 
-for i,name in ipairs(Tabs) do
-	local btn = Instance.new("TextButton",TabBar)
-	btn.Size = UDim2.fromScale(1/#Tabs,1)
-	btn.Position = UDim2.fromScale((i-1)/#Tabs,0)
-	btn.Text = name
-	btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-	btn.TextColor3 = Color3.new(1,1,1)
+for i,name in ipairs(tabs) do
+	local b = Instance.new("TextButton", bar)
+	b.Size = UDim2.fromScale(1/#tabs,1)
+	b.Position = UDim2.fromScale((i-1)/#tabs,0)
+	b.Text = name
+	b.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	b.TextColor3 = Color3.new(1,1,1)
 
-	local frame = Instance.new("Frame",Content)
-	frame.Size = UDim2.fromScale(1,1)
-	frame.Visible = false
-	frame.BackgroundTransparency = 1
-	TabFrames[name] = frame
+	local f = Instance.new("Frame", content)
+	f.Size = UDim2.fromScale(1,1)
+	f.Visible = false
+	f.BackgroundTransparency = 1
+	frames[name] = f
 
-	btn.MouseButton1Click:Connect(function()
-		for _,f in pairs(TabFrames) do f.Visible = false end
-		frame.Visible = true
+	b.MouseButton1Click:Connect(function()
+		for _,v in pairs(frames) do v.Visible = false end
+		f.Visible = true
 	end)
 end
-TabFrames.Main.Visible = true
+frames.Main.Visible = true
 
 --// =========================================================
 --// MAIN TAB (IMAGE PICKER)
 --// =========================================================
-local MTab = TabFrames.Main
+local img = Instance.new("ImageLabel", frames.Main)
+img.Size = UDim2.fromScale(0.5,0.5)
+img.Position = UDim2.fromScale(0.25,0.2)
+img.BackgroundTransparency = 1
+img.Image = "rbxassetid://0"
 
-local ImageBox = Instance.new("TextBox",MTab)
-ImageBox.Size = UDim2.fromScale(0.6,0.12)
-ImageBox.Position = UDim2.fromScale(0.2,0.25)
-ImageBox.PlaceholderText = "ImageId (rbxassetid://)"
-ImageBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
-ImageBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ImageBox)
+local imgBox = Instance.new("TextBox", frames.Main)
+imgBox.Size = UDim2.fromScale(0.5,0.08)
+imgBox.Position = UDim2.fromScale(0.25,0.75)
+imgBox.PlaceholderText = "ID da imagem"
+imgBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+imgBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", imgBox)
 
-local SetImage = Instance.new("TextButton",MTab)
-SetImage.Size = UDim2.fromScale(0.3,0.12)
-SetImage.Position = UDim2.fromScale(0.2,0.4)
-SetImage.Text = "Aplicar Imagem"
-SetImage.BackgroundColor3 = Color3.fromRGB(60,60,60)
-SetImage.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",SetImage)
-
-local Preview = Instance.new("ImageLabel",MTab)
-Preview.Size = UDim2.fromScale(0.25,0.25)
-Preview.Position = UDim2.fromScale(0.6,0.25)
-Preview.BackgroundTransparency = 1
-
-SetImage.MouseButton1Click:Connect(function()
-	Preview.Image = ImageBox.Text
+imgBox.FocusLost:Connect(function()
+	img.Image = "rbxassetid://"..imgBox.Text
 end)
 
 --// =========================================================
---// PLAYER TAB (ANIM SCROLL FIXED)
+--// PLAYER TAB (TP + COPY CLOTHES + BUG)
 --// =========================================================
-local PTab = TabFrames.Player
-local Scroll = Instance.new("ScrollingFrame",PTab)
-Scroll.Size = UDim2.fromScale(0.9,0.9)
-Scroll.Position = UDim2.fromScale(0.05,0.05)
-Scroll.CanvasSize = UDim2.new(0,0,0,0)
-Scroll.ScrollBarImageTransparency = 0
-Scroll.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Instance.new("UICorner",Scroll)
+local list = Instance.new("ScrollingFrame", frames.Player)
+list.Size = UDim2.fromScale(0.5,0.7)
+list.Position = UDim2.fromScale(0.05,0.15)
+list.CanvasSize = UDim2.new(0,0,0,0)
+Instance.new("UIListLayout", list)
 
-local UIList = Instance.new("UIListLayout",Scroll)
-UIList.Padding = UDim.new(0,6)
+for _,p in pairs(Players:GetPlayers()) do
+	if p ~= LP then
+		local b = Instance.new("TextButton", list)
+		b.Size = UDim2.new(1,0,0,30)
+		b.Text = p.Name
+		b.BackgroundColor3 = Color3.fromRGB(50,50,50)
+		b.TextColor3 = Color3.new(1,1,1)
 
-for i=1,10000 do
-	local b = Instance.new("TextButton",Scroll)
-	b.Size = UDim2.new(1,-10,0,28)
-	b.Text = "Animation "..i
+		b.MouseButton1Click:Connect(function()
+			local my = HRP(LP)
+			local tg = HRP(p)
+			if my and tg then my.CFrame = tg.CFrame * CFrame.new(0,0,-3) end
+		end)
+	end
+end
+
+-- COPY CLOTHES
+local copy = Instance.new("TextButton", frames.Player)
+copy.Size = UDim2.fromScale(0.35,0.08)
+copy.Position = UDim2.fromScale(0.6,0.2)
+copy.Text = "Copiar roupas (selecionado)"
+copy.BackgroundColor3 = Color3.fromRGB(70,70,70)
+copy.TextColor3 = Color3.new(1,1,1)
+
+copy.MouseButton1Click:Connect(function()
+	local target = Players:GetPlayers()[2]
+	if target and target.Character then
+		local desc = target.Character:WaitForChild("Humanoid"):GetAppliedDescription()
+		Hum():ApplyDescription(desc)
+	end
+end)
+
+-- BUG PLAYER (RAGDOLL LOCAL)
+local bug = Instance.new("TextButton", frames.Player)
+bug.Size = copy.Size
+bug.Position = UDim2.fromScale(0.6,0.3)
+bug.Text = "Bugar player (ragdoll)"
+bug.BackgroundColor3 = Color3.fromRGB(100,60,60)
+bug.TextColor3 = Color3.new(1,1,1)
+
+bug.MouseButton1Click:Connect(function()
+	for _,v in pairs(Char():GetDescendants()) do
+		if v:IsA("Motor6D") then v:Destroy() end
+	end
+end)
+
+--// =========================================================
+--// VISUAL TAB (ESP NAME + LINES)
+--// =========================================================
+local function CreateESP(p)
+	if p == LP then return end
+	RunService.RenderStepped:Connect(function()
+		if ESP_ENABLED and p.Character and p.Character:FindFirstChild("Head") then
+			if not p.Character.Head:FindFirstChild("ESP") then
+				local bb = Instance.new("BillboardGui", p.Character.Head)
+				bb.Name = "ESP"
+				bb.Size = UDim2.fromOffset(120,30)
+				bb.AlwaysOnTop = true
+				local t = Instance.new("TextLabel", bb)
+				t.Size = UDim2.fromScale(1,1)
+				t.BackgroundTransparency = 1
+				t.Text = p.Name
+				t.TextColor3 = Color3.new(1,0,0)
+			end
+		elseif p.Character and p.Character:FindFirstChild("Head") then
+			local e = p.Character.Head:FindFirstChild("ESP")
+			if e then e:Destroy() end
+		end
+	end)
+end
+
+for _,p in pairs(Players:GetPlayers()) do
+	CreateESP(p)
+end
+
+local espBtn = Instance.new("TextButton", frames.Visual)
+espBtn.Size = UDim2.fromScale(0.5,0.15)
+espBtn.Position = UDim2.fromScale(0.25,0.3)
+espBtn.Text = "Toggle ESP"
+espBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+espBtn.TextColor3 = Color3.new(1,1,1)
+
+espBtn.MouseButton1Click:Connect(function()
+	ESP_ENABLED = not ESP_ENABLED
+end)
+
+--// =========================================================
+--// ADVANTAGE TAB (FLY / SPEED / NOCLIP / AIM)
+--// =========================================================
+local adv = frames.Advantage
+
+local function Toggle(text,y,callback)
+	local b = Instance.new("TextButton", adv)
+	b.Size = UDim2.fromScale(0.5,0.08)
+	b.Position = UDim2.fromScale(0.25,y)
+	b.Text = text
 	b.BackgroundColor3 = Color3.fromRGB(55,55,55)
 	b.TextColor3 = Color3.new(1,1,1)
-	Instance.new("UICorner",b)
-end
-task.wait()
-Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
-
---// =========================================================
---// ADVANTAGE TAB
---// =========================================================
-local ATab = TabFrames.Advantage
-local function ToggleBtn(txt,y,cb)
-	local b = Instance.new("TextButton",ATab)
-	b.Size = UDim2.fromScale(0.6,0.08)
-	b.Position = UDim2.fromScale(0.2,y)
-	b.Text = txt
-	b.BackgroundColor3 = Color3.fromRGB(70,70,70)
-	b.TextColor3 = Color3.new(1,1,1)
-	Instance.new("UICorner",b)
-	b.MouseButton1Click:Connect(cb)
+	b.MouseButton1Click:Connect(callback)
 end
 
-ToggleBtn("Fly",0.05,function() FlyEnabled = not FlyEnabled end)
-ToggleBtn("Speed",0.15,function()
-	SpeedEnabled = not SpeedEnabled
-	local h = GetHumanoid()
-	if h then h.WalkSpeed = SpeedEnabled and WalkSpeedValue or 16 end
+Toggle("Fly",0.1,function() FLY = not FLY end)
+Toggle("Speed",0.2,function()
+	SPEED = not SPEED
+	Hum().WalkSpeed = SPEED and 40 or WalkSpeed
 end)
-ToggleBtn("Noclip",0.25,function() NoclipEnabled = not NoclipEnabled end)
+Toggle("Noclip",0.3,function() NOCLIP = not NOCLIP end)
+Toggle("Aim Assist",0.4,function() AIMBOT = not AIMBOT end)
+Toggle("Silent Assist",0.5,function() SILENT = not SILENT end)
 
---// =========================================================
---// FLY + NOCLIP FIXED
---// =========================================================
-RunService.RenderStepped:Connect(function()
-	local char = GetChar()
-	if NoclipEnabled then
-		for _,v in pairs(char:GetDescendants()) do
+RunService.Stepped:Connect(function()
+	if NOCLIP then
+		for _,v in pairs(Char():GetDescendants()) do
 			if v:IsA("BasePart") then v.CanCollide = false end
 		end
 	end
-	if FlyEnabled then
-		local hrp = GetHRP()
-		if not hrp then return end
-		if not FlyBV then
-			FlyBV = Instance.new("BodyVelocity",hrp)
-			FlyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
-			FlyBG = Instance.new("BodyGyro",hrp)
-			FlyBG.MaxTorque = Vector3.new(1e5,1e5,1e5)
+end)
+
+--// =========================================================
+--// FLY
+--// =========================================================
+RunService.RenderStepped:Connect(function()
+	if FLY then
+		local hrp = HRP(LP)
+		if hrp then
+			hrp.Velocity = Camera.CFrame.LookVector * FlySpeed
 		end
-		local dir = Vector3.zero
-		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += Camera.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
-		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
-		FlyBV.Velocity = dir * FlySpeed
-		FlyBG.CFrame = Camera.CFrame
-	else
-		if FlyBV then FlyBV:Destroy() FlyBV=nil end
-		if FlyBG then FlyBG:Destroy() FlyBG=nil end
 	end
 end)
 
 --// =========================================================
---// SETTINGS TAB
+--// END
 --// =========================================================
-local STab = TabFrames.Settings
-local KeyInfo = Instance.new("TextLabel",STab)
-KeyInfo.Size = UDim2.fromScale(1,0.15)
-KeyInfo.Position = UDim2.fromScale(0,0.4)
-KeyInfo.BackgroundTransparency = 1
-KeyInfo.TextColor3 = Color3.new(1,1,1)
-KeyInfo.Text = "Key ativa: "..VALID_KEY
