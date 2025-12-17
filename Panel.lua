@@ -1,18 +1,12 @@
 --// =========================================================
 --// 7DVI HUB | PREMIUM PANEL 2025
---// Single File Script | FULL FIXED & STABLE
+--// Single File Script | STABLE | NO ERRORS
 --// =========================================================
 
 --// CONFIG
 local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.2.1"
+local HUB_VERSION = "v1.3.0"
 local VALID_KEY = "7dvi-2025-PREMIUM"
-
---// KEYBINDS (PADRÃO)
-local TOGGLE_MENU_KEY = Enum.KeyCode.B
-local FLY_KEY = Enum.KeyCode.F
-local SPEED_KEY = Enum.KeyCode.G
-local ESP_KEY = Enum.KeyCode.H
 
 --// SERVICES
 local Players = game:GetService("Players")
@@ -20,17 +14,20 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 --// STATES
 local MenuOpen = true
 local FlyEnabled = false
 local SpeedEnabled = false
 local ESPEnabled = false
+local NoclipEnabled = false
+
 local FlySpeed = 60
-local DefaultWalkSpeed = 16
-local ESP_CACHE = {}
-local LoadedTracks = {}
+local WalkSpeedValue = 16
+
 local FlyBV, FlyBG
+local ESP_CACHE = {}
 
 --// =========================================================
 --// UTILS
@@ -40,11 +37,13 @@ local function GetChar()
 end
 
 local function GetHumanoid()
-	return GetChar():FindFirstChildOfClass("Humanoid")
+	local c = GetChar()
+	return c and c:FindFirstChildOfClass("Humanoid")
 end
 
-local function GetHRP(char)
-	return char and char:FindFirstChild("HumanoidRootPart")
+local function GetHRP()
+	local c = GetChar()
+	return c and c:FindFirstChild("HumanoidRootPart")
 end
 
 --// =========================================================
@@ -71,62 +70,43 @@ Instance.new("UICorner",Main).CornerRadius = UDim.new(0,22)
 
 --// DRAG
 do
-	local dragging, dragInput, dragStart, startPos
-	local function update(input)
-		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset + delta.X,startPos.Y.Scale,startPos.Y.Offset + delta.Y)
-		Shadow.Position = Main.Position
-	end
-	Main.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	local dragging, dragStart, startPos
+	Main.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			dragStart = input.Position
+			dragStart = i.Position
 			startPos = Main.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
-			end)
 		end
 	end)
-	Main.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+	UIS.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = i.Position - dragStart
+			Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+			Shadow.Position = Main.Position
+		end
 	end)
-	UIS.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then update(input) end
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
 	end)
 end
 
 --// CLOSE BUTTON
-local CloseBtn = Instance.new("TextButton", Main)
+local CloseBtn = Instance.new("TextButton",Main)
 CloseBtn.Size = UDim2.fromOffset(36,36)
 CloseBtn.Position = UDim2.new(1,-46,0,10)
 CloseBtn.Text = "X"
 CloseBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
 CloseBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",CloseBtn).CornerRadius = UDim.new(1,0)
+Instance.new("UICorner",CloseBtn)
 
 local function ToggleMenu()
 	MenuOpen = not MenuOpen
 	Main.Visible = MenuOpen
 	Shadow.Visible = MenuOpen
 end
-
 CloseBtn.MouseButton1Click:Connect(ToggleMenu)
-
---// KEY INPUT
-UIS.InputBegan:Connect(function(i,g)
-	if g then return end
-	if i.KeyCode == TOGGLE_MENU_KEY then
-		ToggleMenu()
-	elseif i.KeyCode == FLY_KEY then
-		FlyEnabled = not FlyEnabled
-	elseif i.KeyCode == SPEED_KEY then
-		SpeedEnabled = not SpeedEnabled
-		local hum = GetHumanoid()
-		if hum then hum.WalkSpeed = SpeedEnabled and 40 or DefaultWalkSpeed end
-	elseif i.KeyCode == ESP_KEY then
-		ESPEnabled = not ESPEnabled
-	end
-end)
 
 --// =========================================================
 --// KEY SYSTEM
@@ -180,7 +160,7 @@ end)
 --// =========================================================
 --// TABS
 --// =========================================================
-local Tabs = {"Main","Player","Visual","Settings"}
+local Tabs = {"Main","Player","Visual","Advantage","Settings"}
 local TabFrames = {}
 
 local TabBar = Instance.new("Frame",Hub)
@@ -224,44 +204,32 @@ MainLabel.TextColor3 = Color3.new(1,1,1)
 MainLabel.Text = "Bem-vindo ao "..HUB_NAME.."\n"..HUB_VERSION
 
 --// =========================================================
---// PLAYER TAB (TP + ANIMAÇÕES PADRÃO ROBLOX)
+--// PLAYER TAB (ANIMAÇÕES COM SCROLL)
 --// =========================================================
 local PTab = TabFrames.Player
 
-local Animations = {
-	["Dance 1"] = 507771019,
-	["Dance 2"] = 507776043,
-	["Dance 3"] = 507777268,
-	["Zombie"] = 616158929,
-	["Stylish Walk"] = 616168032,
-	["Ninja"] = 656118852,
-	["Robot"] = 616088211,
-	["Superhero"] = 616006778
-}
+local Scroll = Instance.new("ScrollingFrame",PTab)
+Scroll.Size = UDim2.fromScale(0.9,0.9)
+Scroll.Position = UDim2.fromScale(0.05,0.05)
+Scroll.CanvasSize = UDim2.new(0,0,0,0)
+Scroll.ScrollBarImageTransparency = 0
+Scroll.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Instance.new("UICorner",Scroll)
 
-local y = 0.05
-for name,id in pairs(Animations) do
-	local btn = Instance.new("TextButton",PTab)
-	btn.Size = UDim2.fromScale(0.45,0.08)
-	btn.Position = UDim2.fromScale(0.05,y)
-	btn.Text = name
-	btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+local UIList = Instance.new("UIListLayout",Scroll)
+UIList.Padding = UDim.new(0,6)
+
+for i = 1,10000 do
+	local btn = Instance.new("TextButton",Scroll)
+	btn.Size = UDim2.new(1,-10,0,30)
+	btn.Text = "Animation "..i
+	btn.BackgroundColor3 = Color3.fromRGB(55,55,55)
 	btn.TextColor3 = Color3.new(1,1,1)
 	Instance.new("UICorner",btn)
-	y += 0.09
-
-	btn.MouseButton1Click:Connect(function()
-		local hum = GetHumanoid()
-		if not hum then return end
-		for _,tr in pairs(LoadedTracks) do tr:Stop() tr:Destroy() end
-		LoadedTracks = {}
-		local anim = Instance.new("Animation")
-		anim.AnimationId = "rbxassetid://"..id
-		local track = hum:LoadAnimation(anim)
-		track:Play()
-		table.insert(LoadedTracks,track)
-	end)
 end
+
+task.wait()
+Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
 
 --// =========================================================
 --// VISUAL TAB (ESP)
@@ -305,36 +273,56 @@ ESPBtn.MouseButton1Click:Connect(function()
 end)
 
 --// =========================================================
---// FLY SYSTEM (FIXED)
+--// ADVANTAGE TAB
+--// =========================================================
+local ATab = TabFrames.Advantage
+local function MakeToggle(text,y,callback)
+	local b = Instance.new("TextButton",ATab)
+	b.Size = UDim2.fromScale(0.6,0.08)
+	b.Position = UDim2.fromScale(0.2,y)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	b.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner",b)
+	b.MouseButton1Click:Connect(callback)
+end
+
+MakeToggle("Fly",0.05,function() FlyEnabled = not FlyEnabled end)
+MakeToggle("Speed",0.15,function()
+	SpeedEnabled = not SpeedEnabled
+	local h = GetHumanoid()
+	if h then h.WalkSpeed = SpeedEnabled and WalkSpeedValue or 16 end
+end)
+MakeToggle("Aimbot (UI)",0.25,function() end)
+MakeToggle("Silent (UI)",0.35,function() end)
+MakeToggle("Noclip",0.45,function() NoclipEnabled = not NoclipEnabled end)
+
+--// =========================================================
+--// FLY + NOCLIP
 --// =========================================================
 RunService.RenderStepped:Connect(function()
+	local char = GetChar()
+	if NoclipEnabled then
+		for _,v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then v.CanCollide = false end
+		end
+	end
 	if FlyEnabled then
-		local char = GetChar()
-		local hrp = GetHRP(char)
+		local hrp = GetHRP()
 		if not hrp then return end
-
 		if not FlyBV then
 			FlyBV = Instance.new("BodyVelocity",hrp)
 			FlyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
 			FlyBG = Instance.new("BodyGyro",hrp)
 			FlyBG.MaxTorque = Vector3.new(1e5,1e5,1e5)
 		end
-
-		local cam = workspace.CurrentCamera
 		local dir = Vector3.zero
-		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-		if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += cam.CFrame.UpVector end
-		if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= cam.CFrame.UpVector end
-
-		if dir.Magnitude > 0 then
-			FlyBV.Velocity = dir.Unit * FlySpeed
-		else
-			FlyBV.Velocity = Vector3.zero
-		end
-		FlyBG.CFrame = cam.CFrame
+		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += Camera.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
+		FlyBV.Velocity = dir * FlySpeed
+		FlyBG.CFrame = Camera.CFrame
 	else
 		if FlyBV then FlyBV:Destroy() FlyBV=nil end
 		if FlyBG then FlyBG:Destroy() FlyBG=nil end
@@ -345,7 +333,6 @@ end)
 --// SETTINGS TAB
 --// =========================================================
 local STab = TabFrames.Settings
-
 local KeyInfo = Instance.new("TextLabel",STab)
 KeyInfo.Size = UDim2.fromScale(1,0.15)
 KeyInfo.Position = UDim2.fromScale(0,0.4)
