@@ -231,22 +231,76 @@ UIS.InputBegan:Connect(function(i,gp)
 end)
 
 -- ================= ESP COMPLETO =================
-local esp=false
-local drawings={}
-local function clearESP()
-    for _,d in pairs(drawings) do pcall(function() d:Remove() end) end
-    drawings={}
+local function drawLine(a,b,color)
+    local l = Drawing.new("Line")
+    l.From = a
+    l.To = b
+    l.Color = color
+    l.Thickness = 1
+    return l
 end
-
-toggle(Visuals,"ESP Box/Name",20,function(v)
-    esp=v
-    if not v then clearESP() end
-end)
 
 RunService.RenderStepped:Connect(function()
     if not esp or not Drawing then return end
     clearESP()
+
     for _,plr in ipairs(Players:GetPlayers()) do
-        if plr~=Player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp=plr.Character.HumanoidRootPart
-            local pos,vis=Camera:WorldToVi
+        if plr ~= Player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local char = plr.Character
+            local hrp = char.HumanoidRootPart
+            local hum = char:FindFirstChildOfClass("Humanoid")
+
+            local pos,vis = Camera:WorldToViewportPoint(hrp.Position)
+            if not vis then continue end
+
+            -- BOX
+            local box = Drawing.new("Square")
+            box.Size = Vector2.new(60,90)
+            box.Position = Vector2.new(pos.X-30,pos.Y-45)
+            box.Color = Color3.fromRGB(255,0,0)
+            box.Filled = false
+            table.insert(drawings,box)
+
+            -- NAME + DISTANCE
+            local dist = math.floor((Camera.CFrame.Position - hrp.Position).Magnitude)
+            local name = Drawing.new("Text")
+            name.Text = plr.Name.." ["..dist.."m]"
+            name.Position = Vector2.new(pos.X,pos.Y-60)
+            name.Center = true
+            name.Outline = true
+            name.Size = 13
+            table.insert(drawings,name)
+
+            -- HEALTH BAR
+            if Config.ESP_Health and hum then
+                local hp = hum.Health / hum.MaxHealth
+                local bar = Drawing.new("Line")
+                bar.From = Vector2.new(pos.X-35,pos.Y+45)
+                bar.To = Vector2.new(pos.X-35,pos.Y+45-(90*hp))
+                bar.Color = Color3.fromRGB(0,255,0)
+                bar.Thickness = 3
+                table.insert(drawings,bar)
+            end
+
+            -- SKELETON
+            if Config.ESP_Skeleton then
+                local parts = {
+                    {"Head","UpperTorso"},
+                    {"UpperTorso","LowerTorso"},
+                    {"UpperTorso","LeftUpperArm"},
+                    {"UpperTorso","RightUpperArm"},
+                    {"LowerTorso","LeftUpperLeg"},
+                    {"LowerTorso","RightUpperLeg"}
+                }
+                for _,p in pairs(parts) do
+                    if char:FindFirstChild(p[1]) and char:FindFirstChild(p[2]) then
+                        local a = Camera:WorldToViewportPoint(char[p[1]].Position)
+                        local b = Camera:WorldToViewportPoint(char[p[2]].Position)
+                        local l = drawLine(Vector2.new(a.X,a.Y),Vector2.new(b.X,b.Y),Color3.new(1,1,1))
+                        table.insert(drawings,l)
+                    end
+                end
+            end
+        end
+    end
+end)
