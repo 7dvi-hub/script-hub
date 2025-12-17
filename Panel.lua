@@ -54,7 +54,7 @@ if game.CoreGui:FindFirstChild(PANEL_NAME) then
 end
 
 -- ================= KEY ONLINE (TEMPO + HWID) =================
--- Formato do key.txt:
+-- Formato do key.txt: 7dvi
 -- KEY|EXPIRY_UNIX|HWID (HWID opcional, use * para liberar)
 -- Ex: ABC-123|1893456000|*
 local function parseKey(raw)
