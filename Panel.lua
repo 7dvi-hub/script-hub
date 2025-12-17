@@ -5,19 +5,34 @@ AVISO: Recursos dependem do executor (Drawing / writefile / readfile / gethwid)
 ]]
 
 -- ================= CONFIG =================
-local PANEL_NAME = "MeuPainel"
-local TOGGLE_KEY = Enum.KeyCode.RightShift
-local KEY_URL = "https://raw.githubusercontent.com/7dvi-hub/script-hub/main/key.txt"
-local KEY_FILE = "meupainel_key.txt"
-local AIM_KEY = Enum.UserInputType.MouseButton2 -- botão direito
+local CONFIG_FILE = "meupainel_config.json"
 
--- ================= SERVICES =================
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
-local Camera = workspace.CurrentCamera
-local Player = Players.LocalPlayer
+local Config = {
+    ESP_Skeleton = false,
+    ESP_Health = false,
+    ESP_Distance = false,
+    Aim_FOV = 120,
+    Aim_Smooth = 0.15
+}
+
+local HttpService = game:GetService("HttpService")
+
+local function saveConfig()
+    if writefile then
+        writefile(CONFIG_FILE, HttpService:JSONEncode(Config))
+    end
+end
+
+local function loadConfig()
+    if isfile and isfile(CONFIG_FILE) then
+        local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
+        for i,v in pairs(data) do
+            Config[i] = v
+        end
+    end
+end
+
+loadConfig()
 
 -- ================= UTILS =================
 local function notify(msg)
