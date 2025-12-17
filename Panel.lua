@@ -8,7 +8,7 @@ Key System Integrado
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 -- ================= CONFIG =================
-local KEY_CORRETA = "Dek2025"
+local KEY_CORRETA = "7DVI-9XK4-2025"
 local TOGGLE_KEY = Enum.KeyCode.RightShift
 local AIM_KEY = Enum.UserInputType.MouseButton2
 local FlySpeed = 60
