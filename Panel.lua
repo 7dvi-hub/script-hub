@@ -277,3 +277,83 @@ end)
 
 -- ================= AUTO OPEN =================
 toggleUI()
+-- ================= PLAYER TP LIST =================
+local TPFrame = Instance.new("Frame", Main)
+TPFrame.Size = UDim2.new(0,240,0,300)
+TPFrame.Position = UDim2.new(0,260,0,60)
+TPFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Instance.new("UICorner", TPFrame)
+
+local TPTitle = Instance.new("TextLabel", TPFrame)
+TPTitle.Size = UDim2.new(1,0,0,30)
+TPTitle.BackgroundTransparency = 1
+TPTitle.Text = "Players TP"
+TPTitle.Font = Enum.Font.GothamBold
+TPTitle.TextSize = 15
+TPTitle.TextColor3 = Color3.new(1,1,1)
+
+local TPScroll = Instance.new("ScrollingFrame", TPFrame)
+TPScroll.Position = UDim2.new(0,0,0,35)
+TPScroll.Size = UDim2.new(1,0,1,-35)
+TPScroll.CanvasSize = UDim2.new(0,0,0,0)
+TPScroll.ScrollBarImageTransparency = 0.6
+TPScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+TPScroll.BackgroundTransparency = 1
+
+local TPLayout = Instance.new("UIListLayout", TPScroll)
+TPLayout.Padding = UDim.new(0,6)
+
+-- ================= TP FUNCTION =================
+local function teleportTo(plr)
+    local char = LocalPlayer.Character
+    if char and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+        char:PivotTo(plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3))
+    end
+end
+
+-- ================= REFRESH LIST =================
+local function refreshTPList()
+    TPScroll:ClearAllChildren()
+    TPLayout.Parent = TPScroll
+
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local item = Instance.new("Frame", TPScroll)
+            item.Size = UDim2.new(1,-10,0,36)
+            item.BackgroundColor3 = Color3.fromRGB(35,35,35)
+            Instance.new("UICorner", item)
+
+            local name = Instance.new("TextLabel", item)
+            name.Size = UDim2.new(0.65,0,1,0)
+            name.BackgroundTransparency = 1
+            name.Text = p.Name
+            name.Font = Enum.Font.Gotham
+            name.TextSize = 13
+            name.TextColor3 = Color3.new(1,1,1)
+            name.TextXAlignment = Enum.TextXAlignment.Left
+            name.Position = UDim2.new(0,8,0,0)
+
+            local tp = Instance.new("TextButton", item)
+            tp.Size = UDim2.new(0.28,0,0.75,0)
+            tp.Position = UDim2.new(0.7,0,0.125,0)
+            tp.Text = "TP"
+            tp.Font = Enum.Font.GothamBold
+            tp.TextSize = 13
+            tp.BackgroundColor3 = Color3.fromRGB(120,120,255)
+            tp.TextColor3 = Color3.new(1,1,1)
+            Instance.new("UICorner", tp)
+
+            tp.MouseButton1Click:Connect(function()
+                teleportTo(p)
+            end)
+        end
+    end
+end
+
+-- ================= AUTO UPDATE =================
+refreshTPList()
+Players.PlayerAdded:Connect(refreshTPList)
+Players.PlayerRemoving:Connect(refreshTPList)
+
+-- ================= AUTO OPEN =================
+toggleUI()
