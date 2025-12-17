@@ -1,152 +1,197 @@
 --[[
-SCRIPT HUB - KEY SYSTEM + DARK UI + ABAS
-Modelo educacional
+7DVI HUB | PREMIUM UI
+Key System + Dark + Abas + Animações + Blur
 ]]
 
--- CONFIG
-local KEY_CORRETA = "MTT-1234"
-local HUB_NAME = "MTT HUB"
+-- ================= CONFIG =================
+local HUB_NAME = "7DVI HUB"
+local KEY_CORRETA = "7DVI-2025"
 
--- LIMPAR GUI
+-- ================= SERVICES =================
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Player = Players.LocalPlayer
+
+-- ================= CLEAN =================
 if game.CoreGui:FindFirstChild(HUB_NAME) then
     game.CoreGui[HUB_NAME]:Destroy()
 end
 
--- SERVIÇOS
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
+-- ================= BLUR =================
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 0
+Blur.Parent = Lighting
 
--- SCREEN GUI
+local function tweenBlur(v)
+    TweenService:Create(Blur, TweenInfo.new(0.4), {Size = v}):Play()
+end
+
+-- ================= GUI =================
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = HUB_NAME
 
--- FUNÇÃO DRAG
-local function dragify(Frame)
-    local dragToggle, dragInput, dragStart, startPos
-    Frame.InputBegan:Connect(function(input)
+-- ================= DRAG =================
+local function drag(frame)
+    local dragging, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragToggle = true
+            dragging = true
             dragStart = input.Position
-            startPos = Frame.Position
+            startPos = frame.Position
         end
     end)
-    Frame.InputEnded:Connect(function(input)
+    frame.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragToggle = false
+            dragging = false
         end
     end)
     UIS.InputChanged:Connect(function(input)
-        if dragToggle and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
-            Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 end
 
 -- ================= KEY SYSTEM =================
 local KeyFrame = Instance.new("Frame", ScreenGui)
-KeyFrame.Size = UDim2.new(0, 300, 0, 180)
-KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-dragify(KeyFrame)
+KeyFrame.Size = UDim2.new(0,320,0,190)
+KeyFrame.Position = UDim2.new(0.5,-160,0.5,-95)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+KeyFrame.BackgroundTransparency = 0.05
+drag(KeyFrame)
 
-local KeyTitle = Instance.new("TextLabel", KeyFrame)
-KeyTitle.Size = UDim2.new(1,0,0,40)
-KeyTitle.Text = HUB_NAME.." | KEY"
-KeyTitle.TextColor3 = Color3.new(1,1,1)
-KeyTitle.BackgroundTransparency = 1
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 16
+local KCorner = Instance.new("UICorner", KeyFrame)
+KCorner.CornerRadius = UDim.new(0,14)
+
+local KStroke = Instance.new("UIStroke", KeyFrame)
+KStroke.Color = Color3.fromRGB(80,80,80)
+
+local KTitle = Instance.new("TextLabel", KeyFrame)
+KTitle.Size = UDim2.new(1,0,0,45)
+KTitle.Text = HUB_NAME .. " | KEY"
+KTitle.TextColor3 = Color3.fromRGB(255,255,255)
+KTitle.BackgroundTransparency = 1
+KTitle.Font = Enum.Font.GothamBold
+KTitle.TextSize = 18
 
 local KeyBox = Instance.new("TextBox", KeyFrame)
-KeyBox.Size = UDim2.new(0,240,0,35)
-KeyBox.Position = UDim2.new(0.5,-120,0,70)
-KeyBox.PlaceholderText = "Digite a key"
-KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-KeyBox.TextColor3 = Color3.new(1,1,1)
+KeyBox.Size = UDim2.new(0,240,0,38)
+KeyBox.Position = UDim2.new(0.5,-120,0,75)
+KeyBox.PlaceholderText = "Digite sua key"
+KeyBox.BackgroundColor3 = Color3.fromRGB(25,25,25)
+KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextSize = 14
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0,10)
 
 local Confirm = Instance.new("TextButton", KeyFrame)
-Confirm.Size = UDim2.new(0,200,0,35)
-Confirm.Position = UDim2.new(0.5,-100,0,120)
-Confirm.Text = "Confirmar"
-Confirm.BackgroundColor3 = Color3.fromRGB(60,60,60)
-Confirm.TextColor3 = Color3.new(1,1,1)
+Confirm.Size = UDim2.new(0,200,0,38)
+Confirm.Position = UDim2.new(0.5,-100,0,130)
+Confirm.Text = "CONFIRMAR"
+Confirm.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Confirm.TextColor3 = Color3.fromRGB(255,255,255)
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextSize = 14
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0,10)
 
 -- ================= HUB =================
-local HubFrame = Instance.new("Frame")
-HubFrame.Size = UDim2.new(0,500,0,300)
-HubFrame.Position = UDim2.new(0.5,-250,0.5,-150)
-HubFrame.BackgroundColor3 = Color3.fromRGB(18,18,18)
-HubFrame.Visible = false
-HubFrame.Parent = ScreenGui
-dragify(HubFrame)
+local Hub = Instance.new("Frame", ScreenGui)
+Hub.Size = UDim2.new(0,560,0,340)
+Hub.Position = UDim2.new(0.5,-280,0.5,-170)
+Hub.BackgroundColor3 = Color3.fromRGB(14,14,14)
+Hub.Visible = false
+drag(Hub)
 
-local HubTitle = Instance.new("TextLabel", HubFrame)
-HubTitle.Size = UDim2.new(1,0,0,40)
-HubTitle.Text = HUB_NAME
-HubTitle.TextColor3 = Color3.new(1,1,1)
-HubTitle.BackgroundTransparency = 1
-HubTitle.Font = Enum.Font.GothamBold
-HubTitle.TextSize = 18
+local HCorner = Instance.new("UICorner", Hub)
+HCorner.CornerRadius = UDim.new(0,16)
 
--- ABAS
-local Tabs = Instance.new("Frame", HubFrame)
-Tabs.Size = UDim2.new(0,120,1,-40)
-Tabs.Position = UDim2.new(0,0,0,40)
-Tabs.BackgroundColor3 = Color3.fromRGB(25,25,25)
+local HStroke = Instance.new("UIStroke", Hub)
+HStroke.Color = Color3.fromRGB(90,90,90)
 
-local Pages = Instance.new("Frame", HubFrame)
-Pages.Size = UDim2.new(1,-120,1,-40)
-Pages.Position = UDim2.new(0,120,0,40)
+local Title = Instance.new("TextLabel", Hub)
+Title.Size = UDim2.new(1,0,0,45)
+Title.Text = HUB_NAME
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+
+-- ================= SIDEBAR =================
+local Sidebar = Instance.new("Frame", Hub)
+Sidebar.Size = UDim2.new(0,130,1,-45)
+Sidebar.Position = UDim2.new(0,0,0,45)
+Sidebar.BackgroundColor3 = Color3.fromRGB(18,18,18)
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0,16)
+
+local Pages = Instance.new("Frame", Hub)
+Pages.Size = UDim2.new(1,-140,1,-55)
+Pages.Position = UDim2.new(0,140,0,55)
 Pages.BackgroundTransparency = 1
 
 local function createTab(name)
-    local Button = Instance.new("TextButton", Tabs)
-    Button.Size = UDim2.new(1,0,0,40)
-    Button.Text = name
-    Button.BackgroundColor3 = Color3.fromRGB(35,35,35)
-    Button.TextColor3 = Color3.new(1,1,1)
-    Button.Font = Enum.Font.Gotham
+    local btn = Instance.new("TextButton", Sidebar)
+    btn.Size = UDim2.new(1,-10,0,42)
+    btn.Position = UDim2.new(0,5,0,5 + (#Sidebar:GetChildren()-1)*46)
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
 
-    local Page = Instance.new("Frame", Pages)
-    Page.Size = UDim2.new(1,0,1,0)
-    Page.Visible = false
-    Page.BackgroundTransparency = 1
+    local page = Instance.new("Frame", Pages)
+    page.Size = UDim2.new(1,0,1,0)
+    page.Visible = false
+    page.BackgroundTransparency = 1
 
-    Button.MouseButton1Click:Connect(function()
-        for _,v in pairs(Pages:GetChildren()) do
-            v.Visible = false
-        end
-        Page.Visible = true
+    btn.MouseButton1Click:Connect(function()
+        for _,v in pairs(Pages:GetChildren()) do v.Visible = false end
+        page.Visible = true
     end)
 
-    return Page
+    return page
 end
 
-local MainPage = createTab("Main")
-local PlayerPage = createTab("Player")
+local Main = createTab("Main")
+local PlayerTab = createTab("Player")
 
--- BOTÃO EXEMPLO
-local TestButton = Instance.new("TextButton", MainPage)
-TestButton.Size = UDim2.new(0,200,0,40)
-TestButton.Position = UDim2.new(0,20,0,20)
-TestButton.Text = "Hello World"
-TestButton.BackgroundColor3 = Color3.fromRGB(45,45,45)
-TestButton.TextColor3 = Color3.new(1,1,1)
+-- ================= TOGGLE =================
+local function createToggle(parent, text, y, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0,220,0,40)
+    btn.Position = UDim2.new(0,20,0,y)
+    btn.Text = text .. " : OFF"
+    btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
 
-TestButton.MouseButton1Click:Connect(function()
-    print("Script executado")
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = text .. (state and " : ON" or " : OFF")
+        TweenService:Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = state and Color3.fromRGB(60,60,60) or Color3.fromRGB(35,35,35)
+        }):Play()
+        callback(state)
+    end)
+end
+
+createToggle(Main, "Exemplo Toggle", 20, function(v)
+    print("Toggle:", v)
 end)
 
--- KEY CHECK
+-- ================= KEY CHECK =================
 Confirm.MouseButton1Click:Connect(function()
     if KeyBox.Text == KEY_CORRETA then
+        tweenBlur(15)
         KeyFrame:Destroy()
-        HubFrame.Visible = true
-        MainPage.Visible = true
+        Hub.Visible = true
+        Main.Visible = true
     else
         KeyBox.Text = "KEY INVÁLIDA"
     end
