@@ -1,11 +1,11 @@
 --// =========================================================
 --// 7DVI HUB | PREMIUM PANEL 2025
---// Single File Script | STABLE | NO ERRORS
+--// Single File Script | FULL FIXED | STABLE
 --// =========================================================
 
 --// CONFIG
 local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.3.0"
+local HUB_VERSION = "v1.3.1"
 local VALID_KEY = "7dvi-2025-PREMIUM"
 
 --// SERVICES
@@ -18,6 +18,7 @@ local Camera = workspace.CurrentCamera
 
 --// STATES
 local MenuOpen = true
+local Minimized = false
 local FlyEnabled = false
 local SpeedEnabled = false
 local ESPEnabled = false
@@ -44,6 +45,10 @@ end
 local function GetHRP()
 	local c = GetChar()
 	return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function Tween(obj,time,props)
+	TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props):Play()
 end
 
 --// =========================================================
@@ -92,21 +97,37 @@ do
 	end)
 end
 
---// CLOSE BUTTON
-local CloseBtn = Instance.new("TextButton",Main)
-CloseBtn.Size = UDim2.fromOffset(36,36)
-CloseBtn.Position = UDim2.new(1,-46,0,10)
-CloseBtn.Text = "X"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
-CloseBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",CloseBtn)
+--// TOP BUTTONS
+local CloseAll = Instance.new("TextButton",Main)
+CloseAll.Size = UDim2.fromOffset(32,32)
+CloseAll.Position = UDim2.new(1,-38,0,8)
+CloseAll.Text = "X"
+CloseAll.BackgroundColor3 = Color3.fromRGB(120,60,60)
+CloseAll.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",CloseAll)
 
-local function ToggleMenu()
-	MenuOpen = not MenuOpen
-	Main.Visible = MenuOpen
-	Shadow.Visible = MenuOpen
-end
-CloseBtn.MouseButton1Click:Connect(ToggleMenu)
+local MinBtn = Instance.new("TextButton",Main)
+MinBtn.Size = UDim2.fromOffset(32,32)
+MinBtn.Position = UDim2.new(1,-76,0,8)
+MinBtn.Text = "-"
+MinBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+MinBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",MinBtn)
+
+CloseAll.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+MinBtn.MouseButton1Click:Connect(function()
+	Minimized = not Minimized
+	if Minimized then
+		Tween(Main,0.25,{Size = UDim2.fromScale(0.4,0.08)})
+		Tween(Shadow,0.25,{Size = UDim2.fromScale(0.42,0.1)})
+	else
+		Tween(Main,0.25,{Size = UDim2.fromScale(0.4,0.52)})
+		Tween(Shadow,0.25,{Size = UDim2.fromScale(0.42,0.56)})
+	end
+end)
 
 --// =========================================================
 --// KEY SYSTEM
@@ -194,20 +215,39 @@ end
 TabFrames.Main.Visible = true
 
 --// =========================================================
---// MAIN TAB
+--// MAIN TAB (IMAGE PICKER)
 --// =========================================================
-local MainLabel = Instance.new("TextLabel",TabFrames.Main)
-MainLabel.Size = UDim2.fromScale(1,0.3)
-MainLabel.BackgroundTransparency = 1
-MainLabel.TextScaled = true
-MainLabel.TextColor3 = Color3.new(1,1,1)
-MainLabel.Text = "Bem-vindo ao "..HUB_NAME.."\n"..HUB_VERSION
+local MTab = TabFrames.Main
+
+local ImageBox = Instance.new("TextBox",MTab)
+ImageBox.Size = UDim2.fromScale(0.6,0.12)
+ImageBox.Position = UDim2.fromScale(0.2,0.25)
+ImageBox.PlaceholderText = "ImageId (rbxassetid://)"
+ImageBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+ImageBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",ImageBox)
+
+local SetImage = Instance.new("TextButton",MTab)
+SetImage.Size = UDim2.fromScale(0.3,0.12)
+SetImage.Position = UDim2.fromScale(0.2,0.4)
+SetImage.Text = "Aplicar Imagem"
+SetImage.BackgroundColor3 = Color3.fromRGB(60,60,60)
+SetImage.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",SetImage)
+
+local Preview = Instance.new("ImageLabel",MTab)
+Preview.Size = UDim2.fromScale(0.25,0.25)
+Preview.Position = UDim2.fromScale(0.6,0.25)
+Preview.BackgroundTransparency = 1
+
+SetImage.MouseButton1Click:Connect(function()
+	Preview.Image = ImageBox.Text
+end)
 
 --// =========================================================
---// PLAYER TAB (ANIMAÇÕES COM SCROLL)
+--// PLAYER TAB (ANIM SCROLL FIXED)
 --// =========================================================
 local PTab = TabFrames.Player
-
 local Scroll = Instance.new("ScrollingFrame",PTab)
 Scroll.Size = UDim2.fromScale(0.9,0.9)
 Scroll.Position = UDim2.fromScale(0.05,0.05)
@@ -219,86 +259,42 @@ Instance.new("UICorner",Scroll)
 local UIList = Instance.new("UIListLayout",Scroll)
 UIList.Padding = UDim.new(0,6)
 
-for i = 1,10000 do
-	local btn = Instance.new("TextButton",Scroll)
-	btn.Size = UDim2.new(1,-10,0,30)
-	btn.Text = "Animation "..i
-	btn.BackgroundColor3 = Color3.fromRGB(55,55,55)
-	btn.TextColor3 = Color3.new(1,1,1)
-	Instance.new("UICorner",btn)
+for i=1,10000 do
+	local b = Instance.new("TextButton",Scroll)
+	b.Size = UDim2.new(1,-10,0,28)
+	b.Text = "Animation "..i
+	b.BackgroundColor3 = Color3.fromRGB(55,55,55)
+	b.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner",b)
 end
-
 task.wait()
 Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
-
---// =========================================================
---// VISUAL TAB (ESP)
---// =========================================================
-local VTab = TabFrames.Visual
-
-local ESPBtn = Instance.new("TextButton",VTab)
-ESPBtn.Size = UDim2.fromScale(0.5,0.15)
-ESPBtn.Position = UDim2.fromScale(0.25,0.2)
-ESPBtn.Text = "Toggle ESP Name"
-ESPBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-ESPBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ESPBtn)
-
-local function ClearESP()
-	for _,v in pairs(ESP_CACHE) do v:Destroy() end
-	ESP_CACHE = {}
-end
-
-ESPBtn.MouseButton1Click:Connect(function()
-	ESPEnabled = not ESPEnabled
-	ClearESP()
-	if ESPEnabled then
-		for _,p in pairs(Players:GetPlayers()) do
-			if p ~= LocalPlayer and p.Character then
-				local head = p.Character:FindFirstChild("Head")
-				if head then
-					local bb = Instance.new("BillboardGui",head)
-					bb.Size = UDim2.fromOffset(120,30)
-					bb.AlwaysOnTop = true
-					local t = Instance.new("TextLabel",bb)
-					t.Size = UDim2.fromScale(1,1)
-					t.BackgroundTransparency = 1
-					t.Text = p.Name
-					t.TextColor3 = Color3.fromRGB(255,60,60)
-					table.insert(ESP_CACHE,bb)
-				end
-			end
-		end
-	end
-end)
 
 --// =========================================================
 --// ADVANTAGE TAB
 --// =========================================================
 local ATab = TabFrames.Advantage
-local function MakeToggle(text,y,callback)
+local function ToggleBtn(txt,y,cb)
 	local b = Instance.new("TextButton",ATab)
 	b.Size = UDim2.fromScale(0.6,0.08)
 	b.Position = UDim2.fromScale(0.2,y)
-	b.Text = text
+	b.Text = txt
 	b.BackgroundColor3 = Color3.fromRGB(70,70,70)
 	b.TextColor3 = Color3.new(1,1,1)
 	Instance.new("UICorner",b)
-	b.MouseButton1Click:Connect(callback)
+	b.MouseButton1Click:Connect(cb)
 end
 
-MakeToggle("Fly",0.05,function() FlyEnabled = not FlyEnabled end)
-MakeToggle("Speed",0.15,function()
+ToggleBtn("Fly",0.05,function() FlyEnabled = not FlyEnabled end)
+ToggleBtn("Speed",0.15,function()
 	SpeedEnabled = not SpeedEnabled
 	local h = GetHumanoid()
 	if h then h.WalkSpeed = SpeedEnabled and WalkSpeedValue or 16 end
 end)
-MakeToggle("Aimbot (UI)",0.25,function() end)
-MakeToggle("Silent (UI)",0.35,function() end)
-MakeToggle("Noclip",0.45,function() NoclipEnabled = not NoclipEnabled end)
+ToggleBtn("Noclip",0.25,function() NoclipEnabled = not NoclipEnabled end)
 
 --// =========================================================
---// FLY + NOCLIP
+--// FLY + NOCLIP FIXED
 --// =========================================================
 RunService.RenderStepped:Connect(function()
 	local char = GetChar()
