@@ -1,14 +1,14 @@
---// ===============================
+--// =========================================================
 --// 7DVI HUB | PREMIUM PANEL 2025
---// Single File Script (FIXED)
---// ===============================
+--// Single File Script | FULL FIXED & STABLE
+--// =========================================================
 
 --// CONFIG
 local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.2.0"
+local HUB_VERSION = "v1.2.1"
 local VALID_KEY = "7dvi-2025-PREMIUM"
 
--- KEYBINDS (PADRÃO)
+--// KEYBINDS (PADRÃO)
 local TOGGLE_MENU_KEY = Enum.KeyCode.B
 local FLY_KEY = Enum.KeyCode.F
 local SPEED_KEY = Enum.KeyCode.G
@@ -23,7 +23,6 @@ local LocalPlayer = Players.LocalPlayer
 
 --// STATES
 local MenuOpen = true
-local AnimationsEnabled = true
 local FlyEnabled = false
 local SpeedEnabled = false
 local ESPEnabled = false
@@ -33,33 +32,24 @@ local ESP_CACHE = {}
 local LoadedTracks = {}
 local FlyBV, FlyBG
 
---// ===============================
+--// =========================================================
 --// UTILS
---// ===============================
-local function Tween(obj,t,props)
-	if not AnimationsEnabled then
-		for i,v in pairs(props) do obj[i]=v end
-		return
-	end
-	TweenService:Create(obj,TweenInfo.new(t,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props):Play()
-end
-
+--// =========================================================
 local function GetChar()
 	return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 end
 
 local function GetHumanoid()
-	local char = GetChar()
-	return char and char:FindFirstChildOfClass("Humanoid")
+	return GetChar():FindFirstChildOfClass("Humanoid")
 end
 
 local function GetHRP(char)
 	return char and char:FindFirstChild("HumanoidRootPart")
 end
 
---// ===============================
+--// =========================================================
 --// UI BASE
---// ===============================
+--// =========================================================
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "7DVI_HUB"
 ScreenGui.ResetOnSpawn = false
@@ -79,7 +69,33 @@ Main.AnchorPoint = Vector2.new(0.5,0.5)
 Main.BackgroundColor3 = Color3.fromRGB(22,22,22)
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,22)
 
---// BOTÃO X
+--// DRAG
+do
+	local dragging, dragInput, dragStart, startPos
+	local function update(input)
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset + delta.X,startPos.Y.Scale,startPos.Y.Offset + delta.Y)
+		Shadow.Position = Main.Position
+	end
+	Main.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	Main.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then update(input) end
+	end)
+end
+
+--// CLOSE BUTTON
 local CloseBtn = Instance.new("TextButton", Main)
 CloseBtn.Size = UDim2.fromOffset(36,36)
 CloseBtn.Position = UDim2.new(1,-46,0,10)
@@ -90,12 +106,13 @@ Instance.new("UICorner",CloseBtn).CornerRadius = UDim.new(1,0)
 
 local function ToggleMenu()
 	MenuOpen = not MenuOpen
-	Tween(Main,0.35,{Size = MenuOpen and UDim2.fromScale(0.4,0.52) or UDim2.fromScale(0,0)})
-	Tween(Shadow,0.35,{Size = MenuOpen and UDim2.fromScale(0.42,0.56) or UDim2.fromScale(0,0)})
+	Main.Visible = MenuOpen
+	Shadow.Visible = MenuOpen
 end
 
 CloseBtn.MouseButton1Click:Connect(ToggleMenu)
 
+--// KEY INPUT
 UIS.InputBegan:Connect(function(i,g)
 	if g then return end
 	if i.KeyCode == TOGGLE_MENU_KEY then
@@ -105,17 +122,15 @@ UIS.InputBegan:Connect(function(i,g)
 	elseif i.KeyCode == SPEED_KEY then
 		SpeedEnabled = not SpeedEnabled
 		local hum = GetHumanoid()
-		if hum then
-			hum.WalkSpeed = SpeedEnabled and 40 or DefaultWalkSpeed
-		end
+		if hum then hum.WalkSpeed = SpeedEnabled and 40 or DefaultWalkSpeed end
 	elseif i.KeyCode == ESP_KEY then
 		ESPEnabled = not ESPEnabled
 	end
 end)
 
---// ===============================
+--// =========================================================
 --// KEY SYSTEM
---// ===============================
+--// =========================================================
 local KeyFrame = Instance.new("Frame",Main)
 KeyFrame.Size = UDim2.fromScale(1,1)
 KeyFrame.BackgroundTransparency = 1
@@ -125,7 +140,6 @@ KeyBox.Size = UDim2.fromScale(0.6,0.12)
 KeyBox.Position = UDim2.fromScale(0.5,0.42)
 KeyBox.AnchorPoint = Vector2.new(0.5,0.5)
 KeyBox.PlaceholderText = "Digite a KEY"
-KeyBox.Text = ""
 KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
 KeyBox.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner",KeyBox)
@@ -154,7 +168,7 @@ Verify.MouseButton1Click:Connect(function()
 	if KeyBox.Text == VALID_KEY then
 		KeyMsg.Text = "Key válida!"
 		KeyMsg.TextColor3 = Color3.fromRGB(0,255,0)
-		task.wait(0.5)
+		task.wait(0.4)
 		KeyFrame.Visible = false
 		Hub.Visible = true
 	else
@@ -163,9 +177,9 @@ Verify.MouseButton1Click:Connect(function()
 	end
 end)
 
---// ===============================
+--// =========================================================
 --// TABS
---// ===============================
+--// =========================================================
 local Tabs = {"Main","Player","Visual","Settings"}
 local TabFrames = {}
 
@@ -199,9 +213,9 @@ for i,name in ipairs(Tabs) do
 end
 TabFrames.Main.Visible = true
 
---// ===============================
+--// =========================================================
 --// MAIN TAB
---// ===============================
+--// =========================================================
 local MainLabel = Instance.new("TextLabel",TabFrames.Main)
 MainLabel.Size = UDim2.fromScale(1,0.3)
 MainLabel.BackgroundTransparency = 1
@@ -209,56 +223,49 @@ MainLabel.TextScaled = true
 MainLabel.TextColor3 = Color3.new(1,1,1)
 MainLabel.Text = "Bem-vindo ao "..HUB_NAME.."\n"..HUB_VERSION
 
---// ===============================
---// PLAYER TAB (TP + ANIMAÇÕES)
---// ===============================
+--// =========================================================
+--// PLAYER TAB (TP + ANIMAÇÕES PADRÃO ROBLOX)
+--// =========================================================
 local PTab = TabFrames.Player
 
--- TP POR NOME (LISTA AUTOMÁTICA)
-local PlayerList = Instance.new("ScrollingFrame",PTab)
-PlayerList.Size = UDim2.fromScale(0.6,0.4)
-PlayerList.Position = UDim2.fromScale(0.2,0.05)
-PlayerList.CanvasSize = UDim2.new(0,0,0,0)
-PlayerList.ScrollBarImageTransparency = 0.5
-PlayerList.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Instance.new("UICorner",PlayerList)
+local Animations = {
+	["Dance 1"] = 507771019,
+	["Dance 2"] = 507776043,
+	["Dance 3"] = 507777268,
+	["Zombie"] = 616158929,
+	["Stylish Walk"] = 616168032,
+	["Ninja"] = 656118852,
+	["Robot"] = 616088211,
+	["Superhero"] = 616006778
+}
 
-local UIList = Instance.new("UIListLayout",PlayerList)
-UIList.Padding = UDim.new(0,6)
+local y = 0.05
+for name,id in pairs(Animations) do
+	local btn = Instance.new("TextButton",PTab)
+	btn.Size = UDim2.fromScale(0.45,0.08)
+	btn.Position = UDim2.fromScale(0.05,y)
+	btn.Text = name
+	btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	btn.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner",btn)
+	y += 0.09
 
-local function RefreshPlayers()
-	for _,c in pairs(PlayerList:GetChildren()) do
-		if c:IsA("TextButton") then c:Destroy() end
-	end
-	for _,p in pairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer then
-			local btn = Instance.new("TextButton",PlayerList)
-			btn.Size = UDim2.new(1,-6,0,30)
-			btn.Text = p.Name
-			btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-			btn.TextColor3 = Color3.new(1,1,1)
-			Instance.new("UICorner",btn)
-			btn.MouseButton1Click:Connect(function()
-				pcall(function()
-					local myhrp = GetHRP(GetChar())
-					local thrp = GetHRP(p.Character)
-					if myhrp and thrp then
-						myhrp.CFrame = thrp.CFrame * CFrame.new(0,0,-3)
-					end
-				end)
-			end)
-		end
-	end
-	task.wait()
-	PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
+	btn.MouseButton1Click:Connect(function()
+		local hum = GetHumanoid()
+		if not hum then return end
+		for _,tr in pairs(LoadedTracks) do tr:Stop() tr:Destroy() end
+		LoadedTracks = {}
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://"..id
+		local track = hum:LoadAnimation(anim)
+		track:Play()
+		table.insert(LoadedTracks,track)
+	end)
 end
-Players.PlayerAdded:Connect(RefreshPlayers)
-Players.PlayerRemoving:Connect(RefreshPlayers)
-RefreshPlayers()
 
---// ===============================
+--// =========================================================
 --// VISUAL TAB (ESP)
---// ===============================
+--// =========================================================
 local VTab = TabFrames.Visual
 
 local ESPBtn = Instance.new("TextButton",VTab)
@@ -297,24 +304,51 @@ ESPBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
---// ===============================
+--// =========================================================
+--// FLY SYSTEM (FIXED)
+--// =========================================================
+RunService.RenderStepped:Connect(function()
+	if FlyEnabled then
+		local char = GetChar()
+		local hrp = GetHRP(char)
+		if not hrp then return end
+
+		if not FlyBV then
+			FlyBV = Instance.new("BodyVelocity",hrp)
+			FlyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
+			FlyBG = Instance.new("BodyGyro",hrp)
+			FlyBG.MaxTorque = Vector3.new(1e5,1e5,1e5)
+		end
+
+		local cam = workspace.CurrentCamera
+		local dir = Vector3.zero
+		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += cam.CFrame.UpVector end
+		if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= cam.CFrame.UpVector end
+
+		if dir.Magnitude > 0 then
+			FlyBV.Velocity = dir.Unit * FlySpeed
+		else
+			FlyBV.Velocity = Vector3.zero
+		end
+		FlyBG.CFrame = cam.CFrame
+	else
+		if FlyBV then FlyBV:Destroy() FlyBV=nil end
+		if FlyBG then FlyBG:Destroy() FlyBG=nil end
+	end
+end)
+
+--// =========================================================
 --// SETTINGS TAB
---// ===============================
+--// =========================================================
 local STab = TabFrames.Settings
 
-local ClosePanelBtn = Instance.new("TextButton",STab)
-ClosePanelBtn.Size = UDim2.fromScale(0.6,0.1)
-ClosePanelBtn.Position = UDim2.fromScale(0.2,0.2)
-ClosePanelBtn.Text = "Abrir / Fechar Painel (B)"
-ClosePanelBtn.BackgroundColor3 = Color3.fromRGB(120,60,60)
-ClosePanelBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ClosePanelBtn)
-
-ClosePanelBtn.MouseButton1Click:Connect(ToggleMenu)
-
 local KeyInfo = Instance.new("TextLabel",STab)
-KeyInfo.Size = UDim2.fromScale(1,0.1)
-KeyInfo.Position = UDim2.fromScale(0,0.8)
+KeyInfo.Size = UDim2.fromScale(1,0.15)
+KeyInfo.Position = UDim2.fromScale(0,0.4)
 KeyInfo.BackgroundTransparency = 1
 KeyInfo.TextColor3 = Color3.new(1,1,1)
 KeyInfo.Text = "Key ativa: "..VALID_KEY
