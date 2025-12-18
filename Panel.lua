@@ -1,5 +1,5 @@
 --// =========================================================
---// 7DVI HUB | PREMIUM PANEL 2025
+--// 7DVI NEXUS | PREMIUM PANEL 2025
 --// Single File Script | FINAL – STABLE – SAFE
 --// =========================================================
 
@@ -7,14 +7,12 @@
 local HUB_NAME = "7DVI Nexus"
 local HUB_VERSION = "v1.4.0"
 local VALID_KEY = "7dvi-2025-PREMIUM"
-
 local TOGGLE_KEY = Enum.KeyCode.B
 
 --// ================= SERVICES =================
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -22,30 +20,23 @@ local Camera = workspace.CurrentCamera
 --// ================= STATES =================
 local MenuOpen = true
 local Minimized = false
-
 local FlyEnabled = false
 local SpeedEnabled = false
 local ESPNames = false
-local ESPLines = false
 
 local FlySpeed = 60
 local WalkSpeed = 16
-
 local ESPNameSize = 14
-local ESPColor = Color3.fromRGB(255, 60, 60)
-
+local ESPColor = Color3.fromRGB(255,60,60)
 local ThemeColor = Color3.fromRGB(22,22,22)
-local PanelImageURL = ""
 
 --// ================= UTILS =================
 local function Char()
 	return LP.Character or LP.CharacterAdded:Wait()
 end
-
 local function Hum()
 	return Char():WaitForChild("Humanoid")
 end
-
 local function HRP(plr)
 	return plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 end
@@ -55,7 +46,6 @@ local GUI = Instance.new("ScreenGui", game.CoreGui)
 GUI.Name = "7DVI_HUB"
 GUI.ResetOnSpawn = false
 
--- Shadow
 local Shadow = Instance.new("Frame", GUI)
 Shadow.Size = UDim2.fromScale(0.42,0.56)
 Shadow.Position = UDim2.fromScale(0.5,0.5)
@@ -64,7 +54,6 @@ Shadow.BackgroundColor3 = Color3.new(0,0,0)
 Shadow.BackgroundTransparency = 0.5
 Instance.new("UICorner",Shadow).CornerRadius = UDim.new(0,22)
 
--- Main
 local Main = Instance.new("Frame", GUI)
 Main.Size = UDim2.fromScale(0.4,0.52)
 Main.Position = UDim2.fromScale(0.5,0.5)
@@ -72,13 +61,12 @@ Main.AnchorPoint = Vector2.new(0.5,0.5)
 Main.BackgroundColor3 = ThemeColor
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,22)
 
--- Background Image
+-- Background image
 local BGImage = Instance.new("ImageLabel", Main)
 BGImage.Size = UDim2.fromScale(1,1)
 BGImage.BackgroundTransparency = 1
 BGImage.ImageTransparency = 0.85
 BGImage.ScaleType = Enum.ScaleType.Crop
-BGImage.ZIndex = 0
 Instance.new("UICorner",BGImage).CornerRadius = UDim.new(0,22)
 
 -- Drag
@@ -108,9 +96,9 @@ local Close = Instance.new("TextButton", Main)
 Close.Size = UDim2.fromOffset(32,32)
 Close.Position = UDim2.new(1,-38,0,6)
 Close.Text = "✕"
+Close.TextScaled = true
 Close.BackgroundColor3 = Color3.fromRGB(160,60,60)
 Close.TextColor3 = Color3.new(1,1,1)
-Close.TextScaled = true
 Instance.new("UICorner",Close)
 
 -- Minimize
@@ -118,20 +106,20 @@ local Min = Instance.new("TextButton", Main)
 Min.Size = UDim2.fromOffset(32,32)
 Min.Position = UDim2.new(1,-76,0,6)
 Min.Text = "—"
+Min.TextScaled = true
 Min.BackgroundColor3 = Color3.fromRGB(80,80,80)
 Min.TextColor3 = Color3.new(1,1,1)
-Min.TextScaled = true
 Instance.new("UICorner",Min)
 
--- Minimized Bubble
+-- Bubble
 local Bubble = Instance.new("TextButton", GUI)
 Bubble.Size = UDim2.fromOffset(50,50)
 Bubble.Position = UDim2.fromScale(0.05,0.5)
 Bubble.Text = "7"
+Bubble.TextScaled = true
 Bubble.Visible = false
 Bubble.BackgroundColor3 = Color3.fromRGB(35,35,35)
 Bubble.TextColor3 = Color3.new(1,1,1)
-Bubble.TextScaled = true
 Instance.new("UICorner",Bubble).CornerRadius = UDim.new(1,0)
 
 Close.MouseButton1Click:Connect(function()
@@ -203,7 +191,7 @@ Verify.MouseButton1Click:Connect(function()
 	if KeyBox.Text == VALID_KEY then
 		Msg.Text = "Key válida!"
 		Msg.TextColor3 = Color3.fromRGB(0,255,0)
-		task.wait(0.25)
+		task.wait(0.3)
 		KeyFrame.Visible = false
 		Hub.Visible = true
 	else
@@ -212,78 +200,14 @@ Verify.MouseButton1Click:Connect(function()
 	end
 end)
 
---// ================= TABS =================
-local Tabs = {"Main","TP","Visual","Movement","Settings"}
-local Frames = {}
-
-local TabBar = Instance.new("Frame",Hub)
-TabBar.Size = UDim2.fromScale(1,0.12)
-TabBar.BackgroundColor3 = Color3.fromRGB(18,18,18)
-
-local Content = Instance.new("Frame",Hub)
-Content.Size = UDim2.fromScale(1,0.88)
-Content.Position = UDim2.fromScale(0,0.12)
-Content.BackgroundTransparency = 1
-
-for i,name in ipairs(Tabs) do
-	local b = Instance.new("TextButton",TabBar)
-	b.Size = UDim2.fromScale(1/#Tabs,1)
-	b.Position = UDim2.fromScale((i-1)/#Tabs,0)
-	b.Text = name
-	b.BackgroundColor3 = Color3.fromRGB(30,30,30)
-	b.TextColor3 = Color3.new(1,1,1)
-
-	local f = Instance.new("Frame",Content)
-	f.Size = UDim2.fromScale(1,1)
-	f.Visible = false
-	f.BackgroundTransparency = 1
-	Frames[name] = f
-
-	b.MouseButton1Click:Connect(function()
-		for _,v in pairs(Frames) do v.Visible = false end
-		f.Visible = true
-	end)
-end
-Frames.Main.Visible = true
-
---// ================= MAIN =================
-local Title = Instance.new("TextLabel",Frames.Main)
-Title.Size = UDim2.fromScale(1,0.18)
-Title.BackgroundTransparency = 1
-Title.TextScaled = true
-Title.TextColor3 = Color3.new(1,1,1)
-Title.Text = HUB_NAME.." | "..HUB_VERSION
-
-local ImgBox = Instance.new("TextBox",Frames.Main)
-ImgBox.Size = UDim2.fromScale(0.7,0.1)
-ImgBox.Position = UDim2.fromScale(0.15,0.32)
-ImgBox.PlaceholderText = "Cole URL da imagem"
-ImgBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-ImgBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ImgBox)
-
-local ApplyImg = Instance.new("TextButton",Frames.Main)
-ApplyImg.Size = UDim2.fromScale(0.4,0.1)
-ApplyImg.Position = UDim2.fromScale(0.3,0.45)
-ApplyImg.Text = "Atualizar Imagem"
-ApplyImg.BackgroundColor3 = Color3.fromRGB(65,65,65)
-ApplyImg.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ApplyImg)
-
-ApplyImg.MouseButton1Click:Connect(function()
-	PanelImageURL = ImgBox.Text
-	BGImage.Image = PanelImageURL
-end)
-
--- Color Picker (Theme)
-local ColorBar = Instance.new("Frame",Frames.Main)
-ColorBar.Size = UDim2.fromScale(0.7,0.06)
-ColorBar.Position = UDim2.fromScale(0.15,0.6)
-ColorBar.BackgroundColor3 = Color3.fromRGB(255,0,0)
+--// ================= COLOR PICKER =================
+local ColorBar = Instance.new("Frame",Hub)
+ColorBar.Size = UDim2.fromScale(0.6,0.05)
+ColorBar.Position = UDim2.fromScale(0.2,0.88)
 Instance.new("UICorner",ColorBar)
 
-local UIGradient = Instance.new("UIGradient",ColorBar)
-UIGradient.Color = ColorSequence.new{
+local Grad = Instance.new("UIGradient",ColorBar)
+Grad.Color = ColorSequence.new{
 	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
 	ColorSequenceKeypoint.new(0.2,Color3.fromRGB(255,255,0)),
 	ColorSequenceKeypoint.new(0.4,Color3.fromRGB(0,255,0)),
@@ -294,18 +218,10 @@ UIGradient.Color = ColorSequence.new{
 
 ColorBar.InputBegan:Connect(function(i)
 	if i.UserInputType == Enum.UserInputType.MouseButton1 then
-		local x = math.clamp((i.Position.X - ColorBar.AbsolutePosition.X) / ColorBar.AbsoluteSize.X,0,1)
-		local c = UIGradient.Color.Keypoints
-		local idx = math.clamp(math.floor(x*(#c-1))+1,1,#c)
-		ThemeColor = c[idx].Value
+		local x = math.clamp((i.Position.X - ColorBar.AbsolutePosition.X)/ColorBar.AbsoluteSize.X,0,1)
+		local k = Grad.Color.Keypoints
+		local idx = math.clamp(math.floor(x*(#k-1))+1,1,#k)
+		ThemeColor = k[idx].Value
 		Main.BackgroundColor3 = ThemeColor
 	end
 end)
-
---// ================= SETTINGS =================
-local KeyLabel = Instance.new("TextLabel",Frames.Settings)
-KeyLabel.Size = UDim2.fromScale(1,0.2)
-KeyLabel.Position = UDim2.fromScale(0,0.4)
-KeyLabel.BackgroundTransparency = 1
-KeyLabel.TextColor3 = Color3.new(1,1,1)
-KeyLabel.Text = "Key ativa: "..VALID_KEY
