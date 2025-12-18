@@ -4,8 +4,8 @@
 --// =========================================================
 
 --// ================= CONFIG =================
-local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.3.5"
+local HUB_NAME = "7DVI Nexus"
+local HUB_VERSION = "v1.4.0"
 local VALID_KEY = "7dvi-2025-PREMIUM"
 
 local TOGGLE_KEY = Enum.KeyCode.B
@@ -15,7 +15,6 @@ local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
 
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -63,7 +62,7 @@ Shadow.Position = UDim2.fromScale(0.5,0.5)
 Shadow.AnchorPoint = Vector2.new(0.5,0.5)
 Shadow.BackgroundColor3 = Color3.new(0,0,0)
 Shadow.BackgroundTransparency = 0.5
-Instance.new("UICorner",Shadow).CornerRadius = UDim.new(0,20)
+Instance.new("UICorner",Shadow).CornerRadius = UDim.new(0,22)
 
 -- Main
 local Main = Instance.new("Frame", GUI)
@@ -71,7 +70,7 @@ Main.Size = UDim2.fromScale(0.4,0.52)
 Main.Position = UDim2.fromScale(0.5,0.5)
 Main.AnchorPoint = Vector2.new(0.5,0.5)
 Main.BackgroundColor3 = ThemeColor
-Instance.new("UICorner",Main).CornerRadius = UDim.new(0,20)
+Instance.new("UICorner",Main).CornerRadius = UDim.new(0,22)
 
 -- Background Image
 local BGImage = Instance.new("ImageLabel", Main)
@@ -80,7 +79,7 @@ BGImage.BackgroundTransparency = 1
 BGImage.ImageTransparency = 0.85
 BGImage.ScaleType = Enum.ScaleType.Crop
 BGImage.ZIndex = 0
-Instance.new("UICorner",BGImage).CornerRadius = UDim.new(0,20)
+Instance.new("UICorner",BGImage).CornerRadius = UDim.new(0,22)
 
 -- Drag
 do
@@ -106,20 +105,22 @@ end
 
 -- Close
 local Close = Instance.new("TextButton", Main)
-Close.Size = UDim2.fromOffset(30,30)
-Close.Position = UDim2.new(1,-36,0,6)
-Close.Text = "X"
-Close.BackgroundColor3 = Color3.fromRGB(140,50,50)
+Close.Size = UDim2.fromOffset(32,32)
+Close.Position = UDim2.new(1,-38,0,6)
+Close.Text = "✕"
+Close.BackgroundColor3 = Color3.fromRGB(160,60,60)
 Close.TextColor3 = Color3.new(1,1,1)
+Close.TextScaled = true
 Instance.new("UICorner",Close)
 
 -- Minimize
 local Min = Instance.new("TextButton", Main)
-Min.Size = UDim2.fromOffset(30,30)
-Min.Position = UDim2.new(1,-72,0,6)
-Min.Text = "-"
-Min.BackgroundColor3 = Color3.fromRGB(70,70,70)
+Min.Size = UDim2.fromOffset(32,32)
+Min.Position = UDim2.new(1,-76,0,6)
+Min.Text = "—"
+Min.BackgroundColor3 = Color3.fromRGB(80,80,80)
 Min.TextColor3 = Color3.new(1,1,1)
+Min.TextScaled = true
 Instance.new("UICorner",Min)
 
 -- Minimized Bubble
@@ -128,7 +129,7 @@ Bubble.Size = UDim2.fromOffset(50,50)
 Bubble.Position = UDim2.fromScale(0.05,0.5)
 Bubble.Text = "7"
 Bubble.Visible = false
-Bubble.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Bubble.BackgroundColor3 = Color3.fromRGB(35,35,35)
 Bubble.TextColor3 = Color3.new(1,1,1)
 Bubble.TextScaled = true
 Instance.new("UICorner",Bubble).CornerRadius = UDim.new(1,0)
@@ -202,7 +203,7 @@ Verify.MouseButton1Click:Connect(function()
 	if KeyBox.Text == VALID_KEY then
 		Msg.Text = "Key válida!"
 		Msg.TextColor3 = Color3.fromRGB(0,255,0)
-		task.wait(0.3)
+		task.wait(0.25)
 		KeyFrame.Visible = false
 		Hub.Visible = true
 	else
@@ -247,26 +248,25 @@ Frames.Main.Visible = true
 
 --// ================= MAIN =================
 local Title = Instance.new("TextLabel",Frames.Main)
-Title.Size = UDim2.fromScale(1,0.2)
+Title.Size = UDim2.fromScale(1,0.18)
 Title.BackgroundTransparency = 1
 Title.TextScaled = true
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Text = HUB_NAME.." | "..HUB_VERSION
 
--- Image URL
 local ImgBox = Instance.new("TextBox",Frames.Main)
 ImgBox.Size = UDim2.fromScale(0.7,0.1)
-ImgBox.Position = UDim2.fromScale(0.15,0.35)
-ImgBox.PlaceholderText = "Cole URL da imagem (imgur, etc)"
+ImgBox.Position = UDim2.fromScale(0.15,0.32)
+ImgBox.PlaceholderText = "Cole URL da imagem"
 ImgBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
 ImgBox.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner",ImgBox)
 
 local ApplyImg = Instance.new("TextButton",Frames.Main)
 ApplyImg.Size = UDim2.fromScale(0.4,0.1)
-ApplyImg.Position = UDim2.fromScale(0.3,0.48)
-ApplyImg.Text = "Atualizar Painel"
-ApplyImg.BackgroundColor3 = Color3.fromRGB(60,60,60)
+ApplyImg.Position = UDim2.fromScale(0.3,0.45)
+ApplyImg.Text = "Atualizar Imagem"
+ApplyImg.BackgroundColor3 = Color3.fromRGB(65,65,65)
 ApplyImg.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner",ApplyImg)
 
@@ -275,135 +275,30 @@ ApplyImg.MouseButton1Click:Connect(function()
 	BGImage.Image = PanelImageURL
 end)
 
---// ================= TP TAB =================
-local TPScroll = Instance.new("ScrollingFrame",Frames.TP)
-TPScroll.Size = UDim2.fromScale(0.6,0.75)
-TPScroll.Position = UDim2.fromScale(0.2,0.12)
-TPScroll.CanvasSize = UDim2.new(0,0,0,0)
-TPScroll.ScrollBarImageTransparency = 0.2
-TPScroll.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Instance.new("UICorner",TPScroll)
+-- Color Picker (Theme)
+local ColorBar = Instance.new("Frame",Frames.Main)
+ColorBar.Size = UDim2.fromScale(0.7,0.06)
+ColorBar.Position = UDim2.fromScale(0.15,0.6)
+ColorBar.BackgroundColor3 = Color3.fromRGB(255,0,0)
+Instance.new("UICorner",ColorBar)
 
-local TPList = Instance.new("UIListLayout",TPScroll)
-TPList.Padding = UDim.new(0,6)
+local UIGradient = Instance.new("UIGradient",ColorBar)
+UIGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
+	ColorSequenceKeypoint.new(0.2,Color3.fromRGB(255,255,0)),
+	ColorSequenceKeypoint.new(0.4,Color3.fromRGB(0,255,0)),
+	ColorSequenceKeypoint.new(0.6,Color3.fromRGB(0,255,255)),
+	ColorSequenceKeypoint.new(0.8,Color3.fromRGB(0,0,255)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,255)),
+}
 
-local function RefreshTP()
-	for _,c in pairs(TPScroll:GetChildren()) do
-		if c:IsA("TextButton") then c:Destroy() end
-	end
-	for _,p in pairs(Players:GetPlayers()) do
-		if p ~= LP then
-			local bt = Instance.new("TextButton",TPScroll)
-			bt.Size = UDim2.new(1,-10,0,32)
-			bt.Text = p.Name
-			bt.BackgroundColor3 = Color3.fromRGB(50,50,50)
-			bt.TextColor3 = Color3.new(1,1,1)
-			Instance.new("UICorner",bt)
-			bt.MouseButton1Click:Connect(function()
-				if HRP(LP) and HRP(p) then
-					HRP(LP).CFrame = HRP(p).CFrame * CFrame.new(0,0,-3)
-				end
-			end)
-		end
-	end
-	task.wait()
-	TPScroll.CanvasSize = UDim2.new(0,0,0,TPList.AbsoluteContentSize.Y+10)
-end
-Players.PlayerAdded:Connect(RefreshTP)
-Players.PlayerRemoving:Connect(RefreshTP)
-RefreshTP()
-
---// ================= VISUAL =================
-local ESPNamesBtn = Instance.new("TextButton",Frames.Visual)
-ESPNamesBtn.Size = UDim2.fromScale(0.5,0.12)
-ESPNamesBtn.Position = UDim2.fromScale(0.25,0.2)
-ESPNamesBtn.Text = "ESP Nomes"
-ESPNamesBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-ESPNamesBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",ESPNamesBtn)
-
-local ESPLinesBtn = ESPNamesBtn:Clone()
-ESPLinesBtn.Parent = Frames.Visual
-ESPLinesBtn.Position = UDim2.fromScale(0.25,0.36)
-ESPLinesBtn.Text = "ESP Lines"
-
-ESPNamesBtn.MouseButton1Click:Connect(function()
-	ESPNames = not ESPNames
-end)
-
-ESPLinesBtn.MouseButton1Click:Connect(function()
-	ESPLines = not ESPLines
-end)
-
--- ESP Loop (names only – safe)
-RS.RenderStepped:Connect(function()
-	for _,p in pairs(Players:GetPlayers()) do
-		if p ~= LP and p.Character and p.Character:FindFirstChild("Head") then
-			if ESPNames then
-				if not p.Character.Head:FindFirstChild("ESP_NAME") then
-					local bb = Instance.new("BillboardGui",p.Character.Head)
-					bb.Name = "ESP_NAME"
-					bb.Size = UDim2.fromOffset(120,30)
-					bb.AlwaysOnTop = true
-					local t = Instance.new("TextLabel",bb)
-					t.Size = UDim2.fromScale(1,1)
-					t.BackgroundTransparency = 1
-					t.Text = p.Name
-					t.TextSize = ESPNameSize
-					t.TextColor3 = ESPColor
-				end
-			else
-				if p.Character.Head:FindFirstChild("ESP_NAME") then
-					p.Character.Head.ESP_NAME:Destroy()
-				end
-			end
-		end
-	end
-end)
-
---// ================= MOVEMENT =================
-local FlyBtn = Instance.new("TextButton",Frames.Movement)
-FlyBtn.Size = UDim2.fromScale(0.5,0.12)
-FlyBtn.Position = UDim2.fromScale(0.25,0.2)
-FlyBtn.Text = "Fly"
-FlyBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-FlyBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",FlyBtn)
-
-FlyBtn.MouseButton1Click:Connect(function()
-	FlyEnabled = not FlyEnabled
-end)
-
-local SpeedBtn = FlyBtn:Clone()
-SpeedBtn.Parent = Frames.Movement
-SpeedBtn.Position = UDim2.fromScale(0.25,0.36)
-SpeedBtn.Text = "Speed Walker"
-
-SpeedBtn.MouseButton1Click:Connect(function()
-	SpeedEnabled = not SpeedEnabled
-	Hum().WalkSpeed = SpeedEnabled and WalkSpeed or 16
-end)
-
--- Fly system
-local BV,BG
-RS.RenderStepped:Connect(function()
-	if FlyEnabled and HRP(LP) then
-		if not BV then
-			BV = Instance.new("BodyVelocity",HRP(LP))
-			BV.MaxForce = Vector3.new(1e5,1e5,1e5)
-			BG = Instance.new("BodyGyro",HRP(LP))
-			BG.MaxTorque = Vector3.new(1e5,1e5,1e5)
-		end
-		local dir = Vector3.zero
-		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += Camera.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
-		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
-		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
-		BV.Velocity = dir.Magnitude > 0 and dir.Unit * FlySpeed or Vector3.zero
-		BG.CFrame = Camera.CFrame
-	else
-		if BV then BV:Destroy() BV=nil end
-		if BG then BG:Destroy() BG=nil end
+ColorBar.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		local x = math.clamp((i.Position.X - ColorBar.AbsolutePosition.X) / ColorBar.AbsoluteSize.X,0,1)
+		local c = UIGradient.Color.Keypoints
+		local idx = math.clamp(math.floor(x*(#c-1))+1,1,#c)
+		ThemeColor = c[idx].Value
+		Main.BackgroundColor3 = ThemeColor
 	end
 end)
 
