@@ -15,6 +15,7 @@ local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -135,7 +136,7 @@ end)
 Min.MouseButton1Click:Connect(HideUI)
 Mini.MouseButton1Click:Connect(ShowUI)
 
---// TOGGLE B
+--// TOGGLE KEY B
 UIS.InputBegan:Connect(function(i,g)
 	if g then return end
 	if i.KeyCode == TOGGLE_KEY then
@@ -146,55 +147,3 @@ UIS.InputBegan:Connect(function(i,g)
 		end
 	end
 end)
-
---// ================= KEY SYSTEM =================
-local KeyFrame = Instance.new("Frame",Main)
-KeyFrame.Size = UDim2.fromScale(1,1)
-KeyFrame.BackgroundTransparency = 1
-
-local KeyBox = Instance.new("TextBox",KeyFrame)
-KeyBox.Size = UDim2.fromScale(0.6,0.12)
-KeyBox.Position = UDim2.fromScale(0.5,0.45)
-KeyBox.AnchorPoint = Vector2.new(0.5,0.5)
-KeyBox.PlaceholderText = "Digite a KEY"
-KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-KeyBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",KeyBox)
-
-local Verify = Instance.new("TextButton",KeyFrame)
-Verify.Size = UDim2.fromScale(0.3,0.1)
-Verify.Position = UDim2.fromScale(0.5,0.6)
-Verify.AnchorPoint = Vector2.new(0.5,0.5)
-Verify.Text = "Verificar"
-Verify.BackgroundColor3 = Color3.fromRGB(55,55,55)
-Verify.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner",Verify)
-
-local Msg = Instance.new("TextLabel",KeyFrame)
-Msg.Size = UDim2.fromScale(1,0.1)
-Msg.Position = UDim2.fromScale(0,0.72)
-Msg.BackgroundTransparency = 1
-Msg.TextColor3 = Color3.new(1,1,1)
-
-local Hub = Instance.new("Frame",Main)
-Hub.Size = UDim2.fromScale(1,1)
-Hub.Visible = false
-Hub.BackgroundTransparency = 1
-
-Verify.MouseButton1Click:Connect(function()
-	if KeyBox.Text == VALID_KEY then
-		Msg.Text = "Key válida!"
-		Msg.TextColor3 = Color3.fromRGB(0,255,0)
-		task.wait(0.3)
-		KeyFrame.Visible = false
-		Hub.Visible = true
-	else
-		Msg.Text = "Key inválida!"
-		Msg.TextColor3 = Color3.fromRGB(255,0,0)
-	end
-end)
-
---// =========================================================
---// O RESTANTE DO SCRIPT (TABS, TP, ESP, FLY, SPEED, AIMBOT,
---// SILENT, SETTINGS) PERMANECE 100% IGUAL AO SCRIPT ANTERIOR
---// =========================================================
