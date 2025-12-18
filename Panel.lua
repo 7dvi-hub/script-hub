@@ -1,24 +1,25 @@
 --// =====================================================
 --// 7DVI HUB | PREMIUM PANEL 2025
---// SINGLE FILE | FULL FIX | STABLE
+--// SINGLE FILE | FULL FIX | OPTIMIZED
 --// =====================================================
 
 --// CONFIG
 local HUB_NAME = "7dvi hub"
-local HUB_VERSION = "v1.4.0"
+local HUB_VERSION = "v1.4.1"
 local VALID_KEY = "7dvi-2025-PREMIUM"
 
 --// SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 --// STATES
 local OPEN = true
+local MINIMIZED = false
+
 local FLY = false
 local SPEED = false
 local FlySpeed = 60
@@ -28,20 +29,28 @@ local ESP_NAME = false
 local ESP_LINE = false
 local ESP_SIZE = 14
 local ESP_COLOR = Color3.fromRGB(255,60,60)
-local ESP_CACHE = {}
 
+local ESP_NAMES = {}
+local ESP_LINES = {}
+
+--// =========================
 --// UTILS
+--// =========================
 local function Char()
 	return LP.Character or LP.CharacterAdded:Wait()
 end
+
 local function Hum()
 	return Char():WaitForChild("Humanoid")
 end
+
 local function HRP(plr)
 	return plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 end
 
---// GUI
+--// =========================
+--// GUI BASE
+--// =========================
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "7DVI_HUB"
 gui.ResetOnSpawn = false
@@ -61,7 +70,9 @@ main.AnchorPoint = shadow.AnchorPoint
 main.BackgroundColor3 = Color3.fromRGB(18,18,18)
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,18)
 
+--// =========================
 --// DRAG
+--// =========================
 do
 	local dragging, startPos, startInput
 	main.InputBegan:Connect(function(i)
@@ -70,25 +81,34 @@ do
 			startInput = i.Position
 			startPos = main.Position
 			i.Changed:Connect(function()
-				if i.UserInputState == Enum.UserInputState.End then dragging = false end
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
 			end)
 		end
 	end)
 	UIS.InputChanged:Connect(function(i)
 		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-			local d = i.Position - startInput
-			main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+			local delta = i.Position - startInput
+			main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
 			shadow.Position = main.Position
 		end
 	end)
 end
 
---// BUTTONS
+--// =========================
+--// TOP BUTTONS (CLOSE / MINIMIZE)
+--// =========================
 local close = Instance.new("TextButton", main)
 close.Size = UDim2.fromOffset(32,32)
 close.Position = UDim2.new(1,-38,0,6)
 close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(120,40,40)
+close.BackgroundColor3 = Color3.fromRGB(140,40,40)
 close.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", close)
 
@@ -103,13 +123,16 @@ Instance.new("UICorner", minimize)
 close.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
+
 minimize.MouseButton1Click:Connect(function()
-	OPEN = not OPEN
-	main.Visible = OPEN
-	shadow.Visible = OPEN
+	MINIMIZED = not MINIMIZED
+	main.Visible = not MINIMIZED
+	shadow.Visible = not MINIMIZED
 end)
 
+--// =========================
 --// KEY SYSTEM
+--// =========================
 local keyFrame = Instance.new("Frame", main)
 keyFrame.Size = UDim2.fromScale(1,1)
 keyFrame.BackgroundTransparency = 1
@@ -138,7 +161,6 @@ keyMsg.Position = UDim2.fromScale(0,0.65)
 keyMsg.BackgroundTransparency = 1
 keyMsg.TextColor3 = Color3.new(1,1,1)
 
---// HUB
 local hub = Instance.new("Frame", main)
 hub.Size = UDim2.fromScale(1,1)
 hub.BackgroundTransparency = 1
@@ -154,7 +176,9 @@ verify.MouseButton1Click:Connect(function()
 	end
 end)
 
+--// =========================
 --// TABS
+--// =========================
 local tabs = {"Main","TP","Visual","Advanced"}
 local frames = {}
 
@@ -188,109 +212,68 @@ for i,name in ipairs(tabs) do
 end
 frames.Main.Visible = true
 
---// MAIN TAB
-local img = Instance.new("ImageLabel", frames.Main)
-img.Size = UDim2.fromScale(0.4,0.4)
-img.Position = UDim2.fromScale(0.3,0.1)
-img.BackgroundTransparency = 1
-
-local imgBox = Instance.new("TextBox", frames.Main)
-imgBox.Size = UDim2.fromScale(0.5,0.07)
-imgBox.Position = UDim2.fromScale(0.25,0.55)
-imgBox.PlaceholderText = "Cole URL ou AssetId da imagem"
-imgBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
-imgBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", imgBox)
-
-local applyImg = Instance.new("TextButton", frames.Main)
-applyImg.Size = UDim2.fromScale(0.3,0.07)
-applyImg.Position = UDim2.fromScale(0.35,0.65)
-applyImg.Text = "Atualizar Imagem"
-applyImg.BackgroundColor3 = Color3.fromRGB(70,70,70)
-applyImg.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", applyImg)
-
-applyImg.MouseButton1Click:Connect(function()
-	if imgBox.Text ~= "" then
-		if imgBox.Text:find("rbxassetid://") or tonumber(imgBox.Text) then
-			img.Image = "rbxassetid://"..imgBox.Text:gsub("%D","")
-		elseif imgBox.Text:find("http") and getcustomasset then
-			local data = game:HttpGet(imgBox.Text)
-			local file = "7dvi_img.png"
-			writefile(file,data)
-			img.Image = getcustomasset(file)
-		end
-	end
-end)
-
--- COLOR NUI
-local rBox = Instance.new("TextBox", frames.Main)
-rBox.Size = UDim2.fromScale(0.15,0.06)
-rBox.Position = UDim2.fromScale(0.25,0.75)
-rBox.PlaceholderText = "R"
-local gBox = rBox:Clone(); gBox.Parent = frames.Main; gBox.Position = UDim2.fromScale(0.42,0.75); gBox.PlaceholderText="G"
-local bBox = rBox:Clone(); bBox.Parent = frames.Main; bBox.Position = UDim2.fromScale(0.59,0.75); bBox.PlaceholderText="B"
-for _,bx in pairs({rBox,gBox,bBox}) do
-	bx.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	bx.TextColor3 = Color3.new(1,1,1)
-	Instance.new("UICorner", bx)
-end
-
-local applyColor = Instance.new("TextButton", frames.Main)
-applyColor.Size = UDim2.fromScale(0.3,0.06)
-applyColor.Position = UDim2.fromScale(0.35,0.83)
-applyColor.Text = "Aplicar Cor UI"
-applyColor.BackgroundColor3 = Color3.fromRGB(70,70,70)
-applyColor.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", applyColor)
-
-applyColor.MouseButton1Click:Connect(function()
-	local r = tonumber(rBox.Text)
-	local g = tonumber(gBox.Text)
-	local b = tonumber(bBox.Text)
-	if r and g and b then
-		main.BackgroundColor3 = Color3.fromRGB(r,g,b)
-	end
-end)
-
---// VISUAL TAB (ESP)
+--// =========================
+--// VISUAL TAB (ESP OPTIMIZED)
+--// =========================
 local function ClearESP()
-	for _,v in pairs(ESP_CACHE) do v:Destroy() end
-	ESP_CACHE = {}
+	for _,v in pairs(ESP_NAMES) do v:Destroy() end
+	for _,v in pairs(ESP_LINES) do
+		v.Attachment0:Destroy()
+		v.Attachment1:Destroy()
+		v:Destroy()
+	end
+	ESP_NAMES = {}
+	ESP_LINES = {}
 end
 
-RunService.RenderStepped:Connect(function()
+local function UpdateESP()
 	ClearESP()
-	if ESP_NAME or ESP_LINE then
-		for _,p in pairs(Players:GetPlayers()) do
-			if p ~= LP and p.Character and p.Character:FindFirstChild("Head") then
-				local head = p.Character.Head
-				if ESP_NAME then
-					local bb = Instance.new("BillboardGui", head)
-					bb.Size = UDim2.fromOffset(200,40)
-					bb.AlwaysOnTop = true
-					local t = Instance.new("TextLabel", bb)
-					t.Size = UDim2.fromScale(1,1)
-					t.BackgroundTransparency = 1
-					t.Text = p.Name
-					t.TextSize = ESP_SIZE
-					t.TextColor3 = ESP_COLOR
-					table.insert(ESP_CACHE, bb)
-				end
-				if ESP_LINE and HRP(p) then
-					local beam = Instance.new("Beam")
-					local a0 = Instance.new("Attachment", HRP(LP))
-					local a1 = Instance.new("Attachment", HRP(p))
-					beam.Attachment0 = a0
-					beam.Attachment1 = a1
-					beam.Color = ColorSequence.new(ESP_COLOR)
-					beam.Width0 = 0.1
-					beam.Width1 = 0.1
-					beam.Parent = HRP(LP)
-					table.insert(ESP_CACHE, beam)
-				end
+	if not (ESP_NAME or ESP_LINE) then return end
+
+	for _,p in ipairs(Players:GetPlayers()) do
+		if p ~= LP and p.Character and p.Character:FindFirstChild("Head") and HRP(p) and HRP(LP) then
+			if ESP_NAME then
+				local bb = Instance.new("BillboardGui")
+				bb.Adornee = p.Character.Head
+				bb.Size = UDim2.fromOffset(200,40)
+				bb.AlwaysOnTop = true
+				bb.Parent = gui
+
+				local txt = Instance.new("TextLabel", bb)
+				txt.Size = UDim2.fromScale(1,1)
+				txt.BackgroundTransparency = 1
+				txt.Text = p.Name
+				txt.TextSize = ESP_SIZE
+				txt.TextColor3 = ESP_COLOR
+				txt.TextStrokeTransparency = 0.3
+
+				table.insert(ESP_NAMES, bb)
+			end
+
+			if ESP_LINE then
+				local a0 = Instance.new("Attachment", HRP(LP))
+				local a1 = Instance.new("Attachment", HRP(p))
+				local beam = Instance.new("Beam")
+				beam.Attachment0 = a0
+				beam.Attachment1 = a1
+				beam.Color = ColorSequence.new(ESP_COLOR)
+				beam.Width0 = 0.1
+				beam.Width1 = 0.1
+				beam.FaceCamera = true
+				beam.Parent = HRP(LP)
+
+				table.insert(ESP_LINES, beam)
 			end
 		end
+	end
+end
+
+Players.PlayerAdded:Connect(UpdateESP)
+Players.PlayerRemoving:Connect(UpdateESP)
+
+RunService.RenderStepped:Connect(function()
+	if ESP_NAME or ESP_LINE then
+		UpdateESP()
 	end
 end)
 
@@ -302,7 +285,10 @@ local function ToggleBtn(parent,text,y,callback)
 	b.BackgroundColor3 = Color3.fromRGB(60,60,60)
 	b.TextColor3 = Color3.new(1,1,1)
 	Instance.new("UICorner", b)
-	b.MouseButton1Click:Connect(callback)
+	b.MouseButton1Click:Connect(function()
+		callback()
+		UpdateESP()
+	end)
 end
 
 ToggleBtn(frames.Visual,"ESP NAMES",0.15,function() ESP_NAME = not ESP_NAME end)
@@ -318,10 +304,15 @@ Instance.new("UICorner", sizeBox)
 
 sizeBox.FocusLost:Connect(function()
 	local v = tonumber(sizeBox.Text)
-	if v then ESP_SIZE = math.clamp(v,10,40) end
+	if v then
+		ESP_SIZE = math.clamp(v,10,40)
+		UpdateESP()
+	end
 end)
 
+--// =========================
 --// ADVANCED (FLY + SPEED)
+--// =========================
 RunService.RenderStepped:Connect(function()
 	if FLY then
 		local hrp = HRP(LP)
@@ -331,14 +322,20 @@ RunService.RenderStepped:Connect(function()
 			if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
-			hrp.Velocity = dir.Magnitude > 0 and dir.Unit * FlySpeed or Vector3.zero
+			if dir.Magnitude > 0 then
+				hrp.Velocity = dir.Unit * FlySpeed
+			else
+				hrp.Velocity = Vector3.zero
+			end
 		end
 	end
 end)
 
 UIS.InputBegan:Connect(function(i,g)
 	if g then return end
-	if i.KeyCode == Enum.KeyCode.F then FLY = not FLY end
+	if i.KeyCode == Enum.KeyCode.F then
+		FLY = not FLY
+	end
 	if i.KeyCode == Enum.KeyCode.G then
 		SPEED = not SPEED
 		Hum().WalkSpeed = SPEED and WalkSpeed or 16
